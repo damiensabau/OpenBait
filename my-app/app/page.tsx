@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { AlertTriangle, Shield, Users, Code, Database, Search, FileText, TrendingDown, CheckCircle, ArrowRight, ExternalLink, Calendar, Building2, DollarSign, Lock, Unlock } from 'lucide-react';
 
 export default function OpenBaitLanding() {
@@ -8,12 +9,83 @@ export default function OpenBaitLanding() {
   const [isVisible, setIsVisible] = useState({});
   const [hoveredCase, setHoveredCase] = useState<number | null>(null);
   const [activeMetric, setActiveMetric] = useState<number | null>(null);
+  const [animatedValues, setAnimatedValues] = useState({
+    cases: 0,
+    year: 0,
+    companies: 0,
+    percentage: 0
+  });
+  const [hasAnimated, setHasAnimated] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasAnimated) {
+            setHasAnimated(true);
+            
+            // Animate cases - 127 en 2.5 secondes
+            let casesCount = 0;
+            const casesInterval = setInterval(() => {
+              casesCount += 1;
+              if (casesCount >= 127) {
+                casesCount = 127;
+                clearInterval(casesInterval);
+              }
+              setAnimatedValues(prev => ({ ...prev, cases: casesCount }));
+            }, 20);
+
+            // Animate year - 2025 en 2 secondes
+            let yearCount = 2020;
+            const yearInterval = setInterval(() => {
+              yearCount += 1;
+              if (yearCount >= 2025) {
+                yearCount = 2025;
+                clearInterval(yearInterval);
+              }
+              setAnimatedValues(prev => ({ ...prev, year: yearCount }));
+            }, 400);
+
+            // Animate companies - 45 en 2.25 secondes
+            let companiesCount = 0;
+            const companiesInterval = setInterval(() => {
+              companiesCount += 1;
+              if (companiesCount >= 45) {
+                companiesCount = 45;
+                clearInterval(companiesInterval);
+              }
+              setAnimatedValues(prev => ({ ...prev, companies: companiesCount }));
+            }, 50);
+
+            // Animate percentage - 100% en 2 secondes
+            let percentageCount = 0;
+            const percentageInterval = setInterval(() => {
+              percentageCount += 1;
+              if (percentageCount >= 100) {
+                percentageCount = 100;
+                clearInterval(percentageInterval);
+              }
+              setAnimatedValues(prev => ({ ...prev, percentage: percentageCount }));
+            }, 20);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    const statsSection = document.getElementById('stats-section');
+    if (statsSection) {
+      observer.observe(statsSection);
+    }
+
+    return () => observer.disconnect();
+  }, [hasAnimated]);
 
   const cases = [
     {
@@ -291,7 +363,7 @@ export default function OpenBaitLanding() {
             </div>
             <div className="hidden md:flex items-center gap-8 animate-slideInRight">
               <a href="#about" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">À propos</a>
-              <a href="#database" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Base de données</a>
+              <Link href="/database" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Base de données</Link>
               <a href="#methodology" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Méthodologie</a>
               <a href="#contribute" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Contribuer</a>
               <button className="px-5 py-2 bg-gray-900 text-white text-sm font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-lg btn-primary">
@@ -310,28 +382,43 @@ export default function OpenBaitLanding() {
         </div>
         
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="max-w-4xl opacity-0 animate-fadeInUp">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-xs font-medium rounded-full mb-8 hover:bg-gray-800 transition-all duration-300 cursor-pointer animate-scaleIn">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              PROJET COMMUNAUTAIRE NON-LUCRATIF
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left - Content */}
+            <div className="opacity-0 animate-fadeInUp">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-xs font-medium rounded-full mb-8 hover:bg-gray-800 transition-all duration-300 cursor-pointer animate-scaleIn">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                PROJET COMMUNAUTAIRE NON-LUCRATIF
+              </div>
+              <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-8 leading-tight opacity-0 animate-fadeInUp delay-100">
+                Documenter les dérives des modèles économiques
+                <span className="block text-gray-600 mt-2">logiciels</span>
+              </h1>
+              <p className="text-xl text-gray-600 mb-10 leading-relaxed opacity-0 animate-fadeInUp delay-200">
+                OpenBait.org est une plateforme indépendante qui recense et analyse les logiciels passant 
+                de modèles gratuits ou open source à des modèles payants, afin d'informer les utilisateurs 
+                et décideurs <span className="font-semibold text-gray-900">avant qu'ils ne deviennent dépendants</span>.
+              </p>
+              <div className="flex flex-wrap gap-4 opacity-0 animate-fadeInUp delay-300">
+                <Link href="/database" className="px-8 py-4 bg-gray-900 text-white font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-xl flex items-center gap-2 group btn-primary">
+                  Consulter la base de données
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+                <button className="px-8 py-4 border-2 border-gray-300 text-gray-900 font-medium rounded hover:border-gray-900 transition-all duration-300 hover:shadow-lg">
+                  Lire le rapport
+                </button>
+              </div>
             </div>
-            <h1 className="text-6xl md:text-7xl font-bold text-gray-900 mb-8 leading-tight opacity-0 animate-fadeInUp delay-100">
-              Documenter les dérives des modèles économiques
-              <span className="block text-gray-600 mt-2">logiciels</span>
-            </h1>
-            <p className="text-xl text-gray-600 mb-10 leading-relaxed max-w-3xl opacity-0 animate-fadeInUp delay-200">
-              OpenBait.org est une plateforme indépendante qui recense et analyse les logiciels passant 
-              de modèles gratuits ou open source à des modèles payants, afin d'informer les utilisateurs 
-              et décideurs <span className="font-semibold text-gray-900">avant qu'ils ne deviennent dépendants</span>.
-            </p>
-            <div className="flex flex-wrap gap-4 opacity-0 animate-fadeInUp delay-300">
-              <button className="px-8 py-4 bg-gray-900 text-white font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-xl flex items-center gap-2 group btn-primary">
-                Consulter la base de données
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
-              <button className="px-8 py-4 border-2 border-gray-300 text-gray-900 font-medium rounded hover:border-gray-900 transition-all duration-300 hover:shadow-lg">
-                Lire le rapport
-              </button>
+
+            {/* Right - Image */}
+            <div className="opacity-0 animate-slideInRight delay-200">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-900/20 to-gray-700/20 rounded-2xl transform rotate-3"></div>
+                <img 
+                  src="/image/28499.jpg" 
+                  alt="OpenBait Illustration" 
+                  className="relative rounded-2xl shadow-2xl w-full h-auto object-cover card-hover"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -344,15 +431,15 @@ export default function OpenBaitLanding() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 border-y border-gray-200 bg-white relative overflow-hidden">
+      <section id="stats-section" className="py-16 border-y border-gray-200 bg-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-gray-50 via-white to-gray-50 opacity-50"></div>
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { value: "127", label: "Cas documentés", delay: "delay-100" },
-              { value: "2025", label: "Depuis l'année", delay: "delay-200" },
-              { value: "45", label: "Entreprises suivies", delay: "delay-300" },
-              { value: "100%", label: "Gratuit & Open Source", delay: "delay-400" }
+              { value: animatedValues.cases, label: "Cas documentés", delay: "delay-100" },
+              { value: animatedValues.year, label: "Depuis l'année", delay: "delay-200" },
+              { value: animatedValues.companies, label: "Entreprises suivies", delay: "delay-300" },
+              { value: `${animatedValues.percentage}%`, label: "Gratuit & Open Source", delay: "delay-400" }
             ].map((stat, index) => (
               <div 
                 key={index}
@@ -640,10 +727,10 @@ export default function OpenBaitLanding() {
           </div>
 
           <div className="opacity-0 animate-fadeInUp delay-300">
-            <button className="px-10 py-5 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-300 hover:shadow-2xl inline-flex items-center gap-2 group btn-primary text-lg">
+            <Link href="/support" className="px-10 py-5 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-300 hover:shadow-2xl inline-flex items-center gap-2 group btn-primary text-lg">
               Contribuer au projet
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-            </button>
+            </Link>
             <p className="text-gray-400 mt-6 text-sm">
               100% transparent • 100% communautaire • 0% profit
             </p>
