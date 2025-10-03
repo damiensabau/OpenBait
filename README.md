@@ -61,3 +61,9 @@ A propos :
 | ------------------------------------------------------------ | --------------------------------------------------------------------- |
 | **Opportunities**<br>- Don<br>- rendre service et renseigner | **Threats**<br>- sujet à l'oppression<br>- nécessite des spécialistes |
 
+## Liste offres hébergement
+- OVH : https://www.ovhcloud.com/fr/vps/
+- LWS (+ nom de domaine) : https://www.lws.fr/
+- o2switch (+ nom de domaine) : https://www.o2switch.fr/clubic/
+- Infomaniak (+ nom de domaine) : https://www.infomaniak.com/fr/hebergement/tarifs-et-caracteristiques
+- Hostinger (+ nom de domaine) : https://www.hostinger.com/fr/recommended/clubic-hosting?utm_medium=affiliate&utm_source=aff5735&utm_campaign=98&session=102a580dc3a874a4b9294891e52b04
