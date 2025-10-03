@@ -16,6 +16,20 @@ export default function OpenBaitLanding() {
     percentage: 0
   });
   const [hasAnimated, setHasAnimated] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  // Vérifier si l'utilisateur est connecté
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (token && userStr) {
+      setIsLoggedIn(true);
+      const user = JSON.parse(userStr);
+      setUserRole(user.role);
+    }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -362,13 +376,31 @@ export default function OpenBaitLanding() {
               </div>
             </div>
             <div className="hidden md:flex items-center gap-8 animate-slideInRight">
-              <a href="#about" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">À propos</a>
+              <Link href="/about" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">À propos</Link>
               <Link href="/database" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Base de données</Link>
-              <a href="#methodology" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Méthodologie</a>
-              <a href="#contribute" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Contribuer</a>
-              <button className="px-5 py-2 bg-gray-900 text-white text-sm font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-lg btn-primary">
-                Signaler un cas
-              </button>
+              <Link href="/forum" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Forum</Link>
+              <Link href="/team" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Équipe</Link>
+              <Link href="/partners" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Partenaires</Link>
+              
+              {isLoggedIn ? (
+                <>
+                  <Link href={userRole === 'ADMIN' || userRole === 'MODERATOR' ? '/admin' : '/dashboard'} className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">
+                    {userRole === 'ADMIN' || userRole === 'MODERATOR' ? 'Admin' : 'Dashboard'}
+                  </Link>
+                  <Link href="/report" className="px-5 py-2 bg-gray-900 text-white text-sm font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-lg btn-primary">
+                    Signaler un cas
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/login" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">
+                    Connexion
+                  </Link>
+                  <Link href="/auth/register" className="px-5 py-2 bg-gray-900 text-white text-sm font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-lg btn-primary">
+                    Inscription
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -399,13 +431,28 @@ export default function OpenBaitLanding() {
                 et décideurs <span className="font-semibold text-gray-900">avant qu'ils ne deviennent dépendants</span>.
               </p>
               <div className="flex flex-wrap gap-4 opacity-0 animate-fadeInUp delay-300">
-                <Link href="/database" className="px-8 py-4 bg-gray-900 text-white font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-xl flex items-center gap-2 group btn-primary">
-                  Consulter la base de données
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-                <button className="px-8 py-4 border-2 border-gray-300 text-gray-900 font-medium rounded hover:border-gray-900 transition-all duration-300 hover:shadow-lg">
-                  Lire le rapport
-                </button>
+                {isLoggedIn ? (
+                  <>
+                    <Link href={userRole === 'ADMIN' || userRole === 'MODERATOR' ? '/admin' : '/dashboard'} className="px-8 py-4 bg-gray-900 text-white font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-xl flex items-center gap-2 group btn-primary">
+                      <Shield className="w-4 h-4" />
+                      {userRole === 'ADMIN' || userRole === 'MODERATOR' ? 'Panneau Admin' : 'Mon Dashboard'}
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                    <Link href="/database" className="px-8 py-4 border-2 border-gray-300 text-gray-900 font-medium rounded hover:border-gray-900 transition-all duration-300 hover:shadow-lg">
+                      Base de données
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/database" className="px-8 py-4 bg-gray-900 text-white font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-xl flex items-center gap-2 group btn-primary">
+                      Consulter la base de données
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                    <Link href="/auth/register" className="px-8 py-4 border-2 border-gray-300 text-gray-900 font-medium rounded hover:border-gray-900 transition-all duration-300 hover:shadow-lg">
+                      Rejoindre la communauté
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
 
@@ -414,7 +461,7 @@ export default function OpenBaitLanding() {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-900/20 to-gray-700/20 rounded-2xl transform rotate-3"></div>
                 <img 
-                  src="/image/28499.jpg" 
+                  src="/image/28499.jpgs" 
                   alt="OpenBait Illustration" 
                   className="relative rounded-2xl shadow-2xl w-full h-auto object-cover card-hover"
                 />
@@ -757,33 +804,35 @@ export default function OpenBaitLanding() {
               </p>
             </div>
 
-            {[
-              {
-                title: "Projet",
-                links: ["À propos", "Méthodologie", "Équipe", "Partenaires"]
-              },
-              {
-                title: "Ressources",
-                links: ["Base de données", "Documentation", "API", "Rapports"]
-              },
-              {
-                title: "Communauté",
-                links: ["Contribuer", "GitHub", "Contact", "Newsletter"]
-              }
-            ].map((section, i) => (
-              <div key={i} className={`opacity-0 animate-fadeInUp delay-${(i + 1) * 100}`}>
-                <h4 className="font-semibold text-gray-900 mb-4">{section.title}</h4>
-                <ul className="space-y-3">
-                  {section.links.map((link, j) => (
-                    <li key={j}>
-                      <a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors gradient-border inline-block pb-1">
-                        {link}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            <div className={`opacity-0 animate-fadeInUp delay-100`}>
+              <h4 className="font-semibold text-gray-900 mb-4">Projet</h4>
+              <ul className="space-y-3">
+                <li><Link href="/about" className="text-sm text-gray-600 hover:text-gray-900 transition-colors gradient-border inline-block pb-1">À propos</Link></li>
+                <li><a href="#methodology" className="text-sm text-gray-600 hover:text-gray-900 transition-colors gradient-border inline-block pb-1">Méthodologie</a></li>
+                <li><Link href="/team" className="text-sm text-gray-600 hover:text-gray-900 transition-colors gradient-border inline-block pb-1">Équipe</Link></li>
+                <li><Link href="/partners" className="text-sm text-gray-600 hover:text-gray-900 transition-colors gradient-border inline-block pb-1">Partenaires</Link></li>
+              </ul>
+            </div>
+
+            <div className={`opacity-0 animate-fadeInUp delay-200`}>
+              <h4 className="font-semibold text-gray-900 mb-4">Ressources</h4>
+              <ul className="space-y-3">
+                <li><Link href="/database" className="text-sm text-gray-600 hover:text-gray-900 transition-colors gradient-border inline-block pb-1">Base de données</Link></li>
+                <li><a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors gradient-border inline-block pb-1">Documentation</a></li>
+                <li><a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors gradient-border inline-block pb-1">API</a></li>
+                <li><a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors gradient-border inline-block pb-1">Rapports</a></li>
+              </ul>
+            </div>
+
+            <div className={`opacity-0 animate-fadeInUp delay-300`}>
+              <h4 className="font-semibold text-gray-900 mb-4">Communauté</h4>
+              <ul className="space-y-3">
+                <li><Link href="/support" className="text-sm text-gray-600 hover:text-gray-900 transition-colors gradient-border inline-block pb-1">Contribuer</Link></li>
+                <li><a href="https://github.com/openbait" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-600 hover:text-gray-900 transition-colors gradient-border inline-block pb-1">GitHub</a></li>
+                <li><a href="mailto:contact@openbait.org" className="text-sm text-gray-600 hover:text-gray-900 transition-colors gradient-border inline-block pb-1">Contact</a></li>
+                <li><a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors gradient-border inline-block pb-1">Newsletter</a></li>
+              </ul>
+            </div>
           </div>
 
           <div className="pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">

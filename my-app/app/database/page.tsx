@@ -13,7 +13,7 @@ interface Case {
   year: string;
   impact: string;
   affected: string;
-  status: 'critical' | 'warning' | 'info';
+  status: 'critical' | 'warning' | 'info' | 'stable';
   description: string;
   category: string;
 }
@@ -132,6 +132,54 @@ export default function DatabasePage() {
       status: "warning",
       description: "Passage à une licence avec restrictions temporaires",
       category: "Base de données"
+    },
+    {
+      id: 'linux-kernel-stable',
+      company: "Linux Foundation",
+      product: "Linux Kernel",
+      change: "GPL 2.0 (maintenu)",
+      year: "1991",
+      impact: "Aucun changement",
+      affected: "Écosystème mondial",
+      status: "stable",
+      description: "Maintien de la licence GPL 2.0 depuis l'origine, garantie de stabilité",
+      category: "Système"
+    },
+    {
+      id: 'python-stable',
+      company: "Python Software Foundation",
+      product: "Python",
+      change: "PSF License (maintenu)",
+      year: "1991",
+      impact: "Aucun changement",
+      affected: "Millions de développeurs",
+      status: "stable",
+      description: "Licence permissive stable et open source depuis toujours",
+      category: "Langage"
+    },
+    {
+      id: 'postgresql-stable',
+      company: "PostgreSQL Global Development Group",
+      product: "PostgreSQL",
+      change: "PostgreSQL License (maintenu)",
+      year: "1996",
+      impact: "Aucun changement",
+      affected: "Entreprises du monde entier",
+      status: "stable",
+      description: "Licence permissive type MIT, jamais changée, totalement libre",
+      category: "Base de données"
+    },
+    {
+      id: 'nginx-stable',
+      company: "F5 Networks",
+      product: "NGINX Open Source",
+      change: "BSD 2-Clause (maintenu)",
+      year: "2004",
+      impact: "Aucun changement",
+      affected: "Infrastructure web mondiale",
+      status: "stable",
+      description: "Version open source maintenue malgré l'acquisition, licence stable",
+      category: "Infrastructure"
     }
   ];
 
@@ -156,6 +204,7 @@ export default function DatabasePage() {
       case 'critical': return 'bg-red-50 text-red-700 border-red-200';
       case 'warning': return 'bg-orange-50 text-orange-700 border-orange-200';
       case 'info': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'stable': return 'bg-green-50 text-green-700 border-green-200';
       default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
@@ -165,6 +214,7 @@ export default function DatabasePage() {
       case 'critical': return <AlertTriangle className="w-3 h-3" />;
       case 'warning': return <TrendingDown className="w-3 h-3" />;
       case 'info': return <CheckCircle className="w-3 h-3" />;
+      case 'stable': return <CheckCircle className="w-3 h-3" />;
       default: return null;
     }
   };
@@ -208,7 +258,7 @@ export default function DatabasePage() {
           </div>
 
           {/* Stats rapides */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12">
             <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
               <div className="text-3xl font-bold text-gray-900">{cases.length}</div>
               <div className="text-sm text-gray-600">Cas documentés</div>
@@ -220,10 +270,16 @@ export default function DatabasePage() {
               <div className="text-sm text-gray-600">Critiques</div>
             </div>
             <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-              <div className="text-3xl font-bold text-yellow-500">
+              <div className="text-3xl font-bold text-orange-600">
                 {cases.filter(c => c.status === 'warning').length}
               </div>
               <div className="text-sm text-gray-600">Avertissements</div>
+            </div>
+            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
+              <div className="text-3xl font-bold text-green-600">
+                {cases.filter(c => c.status === 'stable').length}
+              </div>
+              <div className="text-sm text-gray-600">Stables</div>
             </div>
             <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
               <div className="text-3xl font-bold text-gray-900">{categories.length}</div>
@@ -257,6 +313,7 @@ export default function DatabasePage() {
                   <option value="all">Tous les statuts</option>
                   <option value="critical">Critiques</option>
                   <option value="warning">Avertissements</option>
+                  <option value="stable">Stables (sûrs)</option>
                   <option value="info">Informatifs</option>
                 </select>
               </div>
@@ -335,18 +392,29 @@ export default function DatabasePage() {
 
                     {/* Changement de licence */}
                     <div className="pb-4 border-b border-gray-100 mb-4">
-                      <div className="text-xs text-gray-500 mb-2 font-medium">CHANGEMENT</div>
-                      <div className="flex items-center justify-between text-sm gap-2">
-                        <span className="font-mono text-gray-700 flex items-center gap-1 text-xs">
-                          <Unlock className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">{case_item.change.split('→')[0].trim()}</span>
-                        </span>
-                        <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className="font-mono text-gray-900 font-medium flex items-center gap-1 text-xs">
-                          <Lock className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">{case_item.change.split('→')[1].trim()}</span>
-                        </span>
+                      <div className="text-xs text-gray-500 mb-2 font-medium">
+                        {case_item.status === 'stable' ? 'LICENCE' : 'CHANGEMENT'}
                       </div>
+                      {case_item.change.includes('→') ? (
+                        <div className="flex items-center justify-between text-sm gap-2">
+                          <span className="font-mono text-gray-700 flex items-center gap-1 text-xs">
+                            <Unlock className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">{case_item.change.split('→')[0].trim()}</span>
+                          </span>
+                          <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <span className="font-mono text-gray-900 font-medium flex items-center gap-1 text-xs">
+                            <Lock className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">{case_item.change.split('→')[1].trim()}</span>
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center text-sm">
+                          <span className="font-mono text-green-700 font-medium flex items-center gap-2 text-xs">
+                            <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                            <span>{case_item.change}</span>
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Impact */}
@@ -368,7 +436,7 @@ export default function DatabasePage() {
                     <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                       <span className={`px-3 py-1 text-xs font-medium rounded-full border flex items-center gap-1 ${getStatusColor(case_item.status)}`}>
                         {getStatusIcon(case_item.status)}
-                        {case_item.status === 'critical' ? 'Critique' : case_item.status === 'warning' ? 'Avertissement' : 'Info'}
+                        {case_item.status === 'critical' ? 'Critique' : case_item.status === 'warning' ? 'Avertissement' : case_item.status === 'stable' ? 'Stable (sûr)' : 'Info'}
                       </span>
                       <span className="text-sm text-gray-900 font-medium group-hover:gap-2 transition-all flex items-center gap-1">
                         Détails

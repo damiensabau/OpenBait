@@ -14,7 +14,7 @@ interface CaseDetail {
   year: string;
   impact: string;
   affected: string;
-  status: 'critical' | 'warning' | 'info';
+  status: 'critical' | 'warning' | 'info' | 'stable';
   description: string;
   category: string;
   fullDescription: string;
@@ -244,6 +244,7 @@ export default function CaseDetailPage() {
       case 'critical': return 'bg-red-50 text-red-700 border-red-200';
       case 'warning': return 'bg-orange-50 text-orange-700 border-orange-200';
       case 'info': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'stable': return 'bg-green-50 text-green-700 border-green-200';
       default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
@@ -253,6 +254,7 @@ export default function CaseDetailPage() {
       case 'critical': return <AlertTriangle className="w-5 h-5" />;
       case 'warning': return <TrendingDown className="w-5 h-5" />;
       case 'info': return <CheckCircle className="w-5 h-5" />;
+      case 'stable': return <CheckCircle className="w-5 h-5" />;
       default: return null;
     }
   };
@@ -305,7 +307,7 @@ export default function CaseDetailPage() {
                   </span>
                   <span className={`px-3 py-1 text-sm font-medium rounded-full border flex items-center gap-1 ${getStatusColor(caseData.status)}`}>
                     {getStatusIcon(caseData.status)}
-                    {caseData.status === 'critical' ? 'Critique' : caseData.status === 'warning' ? 'Avertissement' : 'Info'}
+                    {caseData.status === 'critical' ? 'Critique' : caseData.status === 'warning' ? 'Avertissement' : caseData.status === 'stable' ? 'Stable (sûr)' : 'Info'}
                   </span>
                 </div>
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">
