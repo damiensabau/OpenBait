@@ -18,6 +18,7 @@ interface Case {
   productName: string;
   category: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reportCount: number;
   createdAt: string;
   reporter?: {
     name: string;
@@ -243,6 +244,9 @@ export default function AdminPage() {
                       Catégorie
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      🔥 Signalements
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Signalé par
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -269,6 +273,28 @@ export default function AdminPage() {
                         <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
                           {case_item.category}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-lg font-bold ${
+                            case_item.reportCount >= 40 ? 'text-red-600' :
+                            case_item.reportCount >= 20 ? 'text-orange-600' :
+                            case_item.reportCount >= 10 ? 'text-yellow-600' :
+                            'text-gray-600'
+                          }`}>
+                            {case_item.reportCount}
+                          </span>
+                          {case_item.reportCount >= 40 && (
+                            <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">
+                              🔥 URGENT
+                            </span>
+                          )}
+                          {case_item.reportCount >= 20 && case_item.reportCount < 40 && (
+                            <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full">
+                              ⚠️ PRIORITÉ
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div>

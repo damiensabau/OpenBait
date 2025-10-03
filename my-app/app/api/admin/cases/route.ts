@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Récupérer tous les cas
+    // Récupérer tous les cas, triés par nombre de signalements puis par date
     const cases = await prisma.case.findMany({
       include: {
         reporter: {
@@ -43,9 +43,10 @@ export async function GET(request: NextRequest) {
           }
         }
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: [
+        { reportCount: 'desc' }, // Les plus signalés en premier 🔥
+        { createdAt: 'desc' }    // Puis les plus récents
+      ]
     });
 
     return NextResponse.json({

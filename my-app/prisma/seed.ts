@@ -1,4 +1,4 @@
-import { PrismaClient, CaseStatus } from '@prisma/client';
+import { PrismaClient, CaseStatus, CaseSeverity } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -42,6 +42,8 @@ async function main() {
         'https://www.linuxfoundation.org/press/announcing-opentofu'
       ]),
       status: CaseStatus.APPROVED,
+      severity: CaseSeverity.CRITICAL, // Fork créé = impact majeur
+      reportCount: 47,
       reporterId: admin.id
     },
     {
@@ -61,6 +63,8 @@ async function main() {
         'https://rancherdesktop.io/'
       ]),
       status: CaseStatus.APPROVED,
+      severity: CaseSeverity.WARNING, // Alternatives existent
+      reportCount: 35,
       reporterId: admin.id
     },
     {
@@ -80,6 +84,8 @@ async function main() {
         'https://aws.amazon.com/blogs/opensource/introducing-opensearch/'
       ]),
       status: CaseStatus.APPROVED,
+      severity: CaseSeverity.CRITICAL, // Fork créé = impact majeur
+      reportCount: 28,
       reporterId: admin.id
     },
     {
@@ -99,6 +105,8 @@ async function main() {
         'https://www.linuxfoundation.org/press/linux-foundation-launches-valkey'
       ]),
       status: CaseStatus.APPROVED,
+      severity: CaseSeverity.CRITICAL, // Fork créé = impact majeur
+      reportCount: 52,
       reporterId: admin.id
     },
     {
@@ -117,6 +125,8 @@ async function main() {
         'https://opensource.org/node/1099'
       ]),
       status: CaseStatus.APPROVED,
+      severity: CaseSeverity.WARNING, // Pas de fork mais controverse
+      reportCount: 22,
       reporterId: admin.id
     },
     {
@@ -134,6 +144,8 @@ async function main() {
         'https://blog.sentry.io/2019/11/06/relicensing-sentry/'
       ]),
       status: CaseStatus.APPROVED,
+      severity: CaseSeverity.STABLE, // Accepté par la communauté
+      reportCount: 15,
       reporterId: admin.id
     },
     {
@@ -151,6 +163,8 @@ async function main() {
         'https://www.cockroachlabs.com/blog/oss-relicensing-cockroachdb/'
       ]),
       status: CaseStatus.APPROVED,
+      severity: CaseSeverity.STABLE, // BSL temporaire
+      reportCount: 8,
       reporterId: admin.id
     },
     {
@@ -168,6 +182,8 @@ async function main() {
         'https://www.confluent.io/blog/license-changes-confluent-platform/'
       ]),
       status: CaseStatus.APPROVED,
+      severity: CaseSeverity.WARNING, // Controverse mais pas de fork
+      reportCount: 12,
       reporterId: admin.id
     },
     {
@@ -185,6 +201,8 @@ async function main() {
         'https://grafana.com/blog/2021/04/20/grafana-loki-tempo-relicensing-to-agplv3/'
       ]),
       status: CaseStatus.APPROVED,
+      severity: CaseSeverity.STABLE, // Bien accepté
+      reportCount: 18,
       reporterId: admin.id
     }
   ];

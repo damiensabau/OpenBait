@@ -22,9 +22,47 @@ export default function DatabasePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [cases, setCases] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [criticalCount, setCriticalCount] = useState(0);
+  const [warningCount, setWarningCount] = useState(0);
+  const [stableCount, setStableCount] = useState(0);
+  const [categoriesCount, setCategoriesCount] = useState(0);
 
-  // Base de données des cas
-  const cases: Case[] = [
+  // Charger les cas depuis l'API
+  React.useEffect(() => {
+    fetchCases();
+  }, []);
+
+  const fetchCases = async () => {
+    try {
+      const response = await fetch('/api/cases');
+      if (response.ok) {
+        const data = await response.json();
+        setCases(data.cases);
+        
+        // Compter les cas par sévérité
+        const critical = data.cases.filter((c: any) => c.severity === 'CRITICAL').length;
+        const warning = data.cases.filter((c: any) => c.severity === 'WARNING').length;
+        const stable = data.cases.filter((c: any) => c.severity === 'STABLE').length;
+        
+        setCriticalCount(critical);
+        setWarningCount(warning);
+        setStableCount(stable);
+        
+        // Compter les catégories uniques
+        const uniqueCategories = new Set(data.cases.map((c: any) => c.category));
+        setCategoriesCount(uniqueCategories.size);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des cas:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Données statiques en fallback (à supprimer une fois la BDD remplie)
+  const staticCases: Case[] = [
     {
       id: 'hashicorp-terraform-2023',
       company: "HashiCorp",
@@ -186,14 +224,13 @@ export default function DatabasePage() {
   // Filtrage
   const filteredCases = cases.filter(case_item => {
     const matchesSearch = 
-      case_item.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      case_item.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      case_item.description.toLowerCase().includes(searchTerm.toLowerCase());
+      case_item.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      case_item.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      case_item.description?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = filterStatus === 'all' || case_item.status === filterStatus;
     const matchesCategory = filterCategory === 'all' || case_item.category === filterCategory;
     
-    return matchesSearch && matchesStatus && matchesCategory;
+    return matchesSearch && matchesCategory;
   });
 
   // Catégories uniques
@@ -259,30 +296,33 @@ export default function DatabasePage() {
 
           {/* Stats rapides */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12">
-            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center hover:shadow-lg transition-shadow">
               <div className="text-3xl font-bold text-gray-900">{cases.length}</div>
               <div className="text-sm text-gray-600">Cas documentés</div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-              <div className="text-3xl font-bold text-red-600">
-                {cases.filter(c => c.status === 'critical').length}
+            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center hover:shadow-lg transition-shadow">
+              <div className="text-3xl font-bold text-red-600 flex items-center justify-center gap-2">
+                <AlertTriangle className="w-6 h-6" />
+                {criticalCount}
               </div>
               <div className="text-sm text-gray-600">Critiques</div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-              <div className="text-3xl font-bold text-orange-600">
-                {cases.filter(c => c.status === 'warning').length}
+            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center hover:shadow-lg transition-shadow">
+              <div className="text-3xl font-bold text-orange-600 flex items-center justify-center gap-2">
+                <TrendingDown className="w-6 h-6" />
+                {warningCount}
               </div>
               <div className="text-sm text-gray-600">Avertissements</div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-              <div className="text-3xl font-bold text-green-600">
-                {cases.filter(c => c.status === 'stable').length}
+            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center hover:shadow-lg transition-shadow">
+              <div className="text-3xl font-bold text-green-600 flex items-center justify-center gap-2">
+                <CheckCircle className="w-6 h-6" />
+                {stableCount}
               </div>
               <div className="text-sm text-gray-600">Stables</div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-              <div className="text-3xl font-bold text-gray-900">{categories.length}</div>
+            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center hover:shadow-lg transition-shadow">
+              <div className="text-3xl font-bold text-blue-600">{categoriesCount}</div>
               <div className="text-sm text-gray-600">Catégories</div>
             </div>
           </div>
@@ -345,7 +385,12 @@ export default function DatabasePage() {
       {/* Grid des cas */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-6">
-          {filteredCases.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-20">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900 mx-auto mb-4"></div>
+              <p className="text-gray-600">Chargement des cas...</p>
+            </div>
+          ) : filteredCases.length === 0 ? (
             <div className="text-center py-20">
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="w-10 h-10 text-gray-400" />
@@ -368,18 +413,23 @@ export default function DatabasePage() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <h3 className="font-bold text-gray-900 text-lg group-hover:text-gray-700 transition-colors">
-                          {case_item.company}
+                          {case_item.companyName || case_item.company}
                         </h3>
                         <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                           <Code className="w-3 h-3" />
-                          {case_item.product}
+                          {case_item.productName || case_item.product}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {case_item.year}
+                          {case_item.changeDate || case_item.year}
                         </span>
+                        {case_item.reportCount && case_item.reportCount >= 20 && (
+                          <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full">
+                            🔥 {case_item.reportCount}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -393,53 +443,30 @@ export default function DatabasePage() {
                     {/* Changement de licence */}
                     <div className="pb-4 border-b border-gray-100 mb-4">
                       <div className="text-xs text-gray-500 mb-2 font-medium">
-                        {case_item.status === 'stable' ? 'LICENCE' : 'CHANGEMENT'}
+                        CHANGEMENT DE LICENCE
                       </div>
-                      {case_item.change.includes('→') ? (
-                        <div className="flex items-center justify-between text-sm gap-2">
-                          <span className="font-mono text-gray-700 flex items-center gap-1 text-xs">
-                            <Unlock className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate">{case_item.change.split('→')[0].trim()}</span>
-                          </span>
-                          <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                          <span className="font-mono text-gray-900 font-medium flex items-center gap-1 text-xs">
-                            <Lock className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate">{case_item.change.split('→')[1].trim()}</span>
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center text-sm">
-                          <span className="font-mono text-green-700 font-medium flex items-center gap-2 text-xs">
-                            <CheckCircle className="w-4 h-4 flex-shrink-0" />
-                            <span>{case_item.change}</span>
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Impact */}
-                    <div className="mb-4">
-                      <div className="text-xs text-gray-500 mb-2 font-medium">IMPACT</div>
-                      <div className="text-sm text-gray-700 mb-1">{case_item.impact}</div>
-                      <div className="text-xs text-gray-500 flex items-center gap-1">
-                        <Building2 className="w-3 h-3" />
-                        {case_item.affected}
+                      <div className="flex items-center justify-between text-sm gap-2">
+                        <span className="font-mono text-gray-700 flex items-center gap-1 text-xs">
+                          <Unlock className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{case_item.licenseInitial || case_item.change?.split('→')[0]?.trim() || 'N/A'}</span>
+                        </span>
+                        <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <span className="font-mono text-gray-900 font-medium flex items-center gap-1 text-xs">
+                          <Lock className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{case_item.licenseFinal || case_item.change?.split('→')[1]?.trim() || 'N/A'}</span>
+                        </span>
                       </div>
                     </div>
 
                     {/* Description */}
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                    <p className="text-sm text-gray-600 mb-4 line-clamp-3">
                       {case_item.description}
                     </p>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                      <span className={`px-3 py-1 text-xs font-medium rounded-full border flex items-center gap-1 ${getStatusColor(case_item.status)}`}>
-                        {getStatusIcon(case_item.status)}
-                        {case_item.status === 'critical' ? 'Critique' : case_item.status === 'warning' ? 'Avertissement' : case_item.status === 'stable' ? 'Stable (sûr)' : 'Info'}
-                      </span>
+                    <div className="flex items-center justify-end pt-4 border-t border-gray-100">
                       <span className="text-sm text-gray-900 font-medium group-hover:gap-2 transition-all flex items-center gap-1">
-                        Détails
+                        Voir les détails
                         <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                       </span>
                     </div>

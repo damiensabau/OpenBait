@@ -22,6 +22,12 @@ enum CaseStatus {
   REJECTED
 }
 
+enum CaseSeverity {
+  CRITICAL    // Changements majeurs avec fort impact
+  WARNING     // Changements significatifs à surveiller
+  STABLE      // Alternatives stables et fiables
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -42,7 +48,7 @@ model User {
 }
 
 model Case {
-  id                String      @id @default(cuid())
+  id                String        @id @default(cuid())
   companyName       String
   productName       String
   category          String
@@ -53,8 +59,10 @@ model Case {
   description       String
   legalAnalysis     String
   communityReaction String
-  sources           String      // JSON string containing array of sources
-  status            CaseStatus  @default(PENDING)
+  sources           String        // JSON string containing array of sources
+  status            CaseStatus    @default(PENDING)
+  severity          CaseSeverity  @default(WARNING) // Niveau de gravité du changement
+  reportCount       Int           @default(1) // Nombre de fois que le cas a été signalé
   
   // Reporter info
   reporterId        String

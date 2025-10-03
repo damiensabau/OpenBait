@@ -18,6 +18,9 @@ export default function OpenBaitLanding() {
   const [hasAnimated, setHasAnimated] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [recentCases, setRecentCases] = useState<any[]>([]);
+  const [loadingCases, setLoadingCases] = useState(true);
+  const [totalCases, setTotalCases] = useState(0);
 
   // Vérifier si l'utilisateur est connecté
   useEffect(() => {
@@ -31,6 +34,29 @@ export default function OpenBaitLanding() {
     }
   }, []);
 
+  // Charger les cas récents
+  useEffect(() => {
+    fetchRecentCases();
+  }, []);
+
+  const fetchRecentCases = async () => {
+    try {
+      const response = await fetch('/api/cases'); // API publique
+      if (response.ok) {
+        const data = await response.json();
+        setTotalCases(data.total);
+        // Prendre les 6 cas les plus signalés (déjà triés par reportCount)
+        setRecentCases(data.cases.slice(0, 6));
+      } else {
+        console.error('Erreur API:', response.status);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des cas:', error);
+    } finally {
+      setLoadingCases(false);
+    }
+  };
+
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
@@ -41,19 +67,20 @@ export default function OpenBaitLanding() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasAnimated) {
+          if (entry.isIntersecting && !hasAnimated && totalCases > 0) {
             setHasAnimated(true);
             
-            // Animate cases - 127 en 2.5 secondes
+            // Animate cases - utilise le vrai nombre depuis la BDD
             let casesCount = 0;
+            const targetCases = totalCases;
             const casesInterval = setInterval(() => {
               casesCount += 1;
-              if (casesCount >= 127) {
-                casesCount = 127;
+              if (casesCount >= targetCases) {
+                casesCount = targetCases;
                 clearInterval(casesInterval);
               }
               setAnimatedValues(prev => ({ ...prev, cases: casesCount }));
-            }, 20);
+            }, Math.max(10, 100 / targetCases));
 
             // Animate year - 2025 en 2 secondes
             let yearCount = 2020;
@@ -99,70 +126,7 @@ export default function OpenBaitLanding() {
     }
 
     return () => observer.disconnect();
-  }, [hasAnimated]);
-
-  const cases = [
-    {
-      company: "HashiCorp",
-      product: "Terraform",
-      change: "MPL 2.0 → BSL 1.1",
-      year: "2023",
-      impact: "Restriction commerciale majeure",
-      affected: "Milliers d'entreprises",
-      status: "critical",
-      description: "Changement de licence empêchant l'utilisation commerciale sans accord"
-    },
-    {
-      company: "Docker Inc.",
-      product: "Docker Desktop",
-      change: "Gratuit → Payant",
-      year: "2021",
-      impact: "Entreprises 250+ employés",
-      affected: "Grandes organisations",
-      status: "critical",
-      description: "Introduction de frais pour les entreprises de plus de 250 employés"
-    },
-    {
-      company: "Adobe",
-      product: "Creative Suite",
-      change: "Licence perpétuelle → Abonnement",
-      year: "2013",
-      impact: "Coûts récurrents obligatoires",
-      affected: "Millions d'utilisateurs",
-      status: "critical",
-      description: "Abandon complet du modèle de licence perpétuelle"
-    },
-    {
-      company: "Redis Labs",
-      product: "Redis Modules",
-      change: "BSD → Commons Clause",
-      year: "2018",
-      impact: "Restriction de vente",
-      affected: "Fournisseurs cloud",
-      status: "warning",
-      description: "Ajout d'une clause interdisant la vente du logiciel"
-    },
-    {
-      company: "Elastic",
-      product: "Elasticsearch & Kibana",
-      change: "Apache 2.0 → SSPL",
-      year: "2021",
-      impact: "Licence non-OSI",
-      affected: "Providers cloud",
-      status: "critical",
-      description: "Passage à une licence considérée non open source"
-    },
-    {
-      company: "MongoDB Inc.",
-      product: "MongoDB",
-      change: "AGPL → SSPL",
-      year: "2018",
-      impact: "Restriction cloud majeure",
-      affected: "AWS et autres clouds",
-      status: "critical",
-      description: "Création de la licence SSPL pour contrer les cloud providers"
-    }
-  ];
+  }, [hasAnimated, totalCases]);
 
   const methodology = [
     {
@@ -609,80 +573,91 @@ export default function OpenBaitLanding() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cases.map((case_item, index) => (
-              <div
-                key={index}
-                className={`bg-white border border-gray-200 rounded-xl p-6 card-hover cursor-pointer group opacity-0 animate-fadeInUp delay-${(index % 3 + 1) * 100}`}
-                onMouseEnter={() => setHoveredCase(index)}
-                onMouseLeave={() => setHoveredCase(null)}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-gray-900 text-lg group-hover:text-gray-700 transition-colors">
-                      {case_item.company}
-                    </h3>
-                    <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                      <Code className="w-3 h-3" />
-                      {case_item.product}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <span className="px-3 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {case_item.year}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="pb-4 border-b border-gray-100">
-                    <div className="text-xs text-gray-500 mb-2 font-medium">CHANGEMENT DE LICENCE</div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-mono text-gray-700 flex items-center gap-1">
-                        <Unlock className="w-3 h-3" />
-                        {case_item.change.split('→')[0]}
-                      </span>
-                      <ArrowRight className="w-4 h-4 text-gray-400" />
-                      <span className="font-mono text-gray-900 font-medium flex items-center gap-1">
-                        <Lock className="w-3 h-3" />
-                        {case_item.change.split('→')[1]}
-                      </span>
+          {loadingCases ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Chargement des cas...</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {recentCases.map((case_item: any, index: number) => (
+                  <Link
+                    href={`/database/${case_item.id}`}
+                    key={case_item.id}
+                    className={`bg-white border border-gray-200 rounded-xl p-6 card-hover cursor-pointer group opacity-0 animate-fadeInUp delay-${(index % 3 + 1) * 100}`}
+                    onMouseEnter={() => setHoveredCase(index)}
+                    onMouseLeave={() => setHoveredCase(null)}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="font-bold text-gray-900 text-lg group-hover:text-gray-700 transition-colors">
+                          {case_item.companyName}
+                        </h3>
+                        <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                          <Code className="w-3 h-3" />
+                          {case_item.productName}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <span className="px-3 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {case_item.changeDate}
+                        </span>
+                        {case_item.reportCount >= 40 && (
+                          <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full">
+                            🔥 {case_item.reportCount}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <div className="text-xs text-gray-500 mb-2 font-medium">IMPACT</div>
-                    <div className="text-sm text-gray-700 mb-1">{case_item.impact}</div>
-                    <div className="text-xs text-gray-500 flex items-center gap-1">
-                      <Building2 className="w-3 h-3" />
-                      {case_item.affected}
+                    <div className="space-y-4">
+                      <div className="pb-4 border-b border-gray-100">
+                        <div className="text-xs text-gray-500 mb-2 font-medium">CHANGEMENT DE LICENCE</div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-mono text-gray-700 flex items-center gap-1">
+                            <Unlock className="w-3 h-3" />
+                            {case_item.licenseInitial}
+                          </span>
+                          <ArrowRight className="w-4 h-4 text-gray-400" />
+                          <span className="font-mono text-gray-900 font-medium flex items-center gap-1">
+                            <Lock className="w-3 h-3" />
+                            {case_item.licenseFinal}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="text-xs text-gray-500 mb-2 font-medium">CATÉGORIE</div>
+                        <div className="text-sm text-gray-700 mb-1">{case_item.category}</div>
+                      </div>
+
+                      <div className={`overflow-hidden transition-all duration-300 ${
+                        hoveredCase === index ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'
+                      }`}>
+                        <p className="text-sm text-gray-600 italic pt-3 border-t border-gray-100 line-clamp-3">
+                          {case_item.description}
+                        </p>
+                      </div>
+
+                      <div className="text-sm text-gray-900 font-medium hover:gap-2 transition-all flex items-center gap-1 group-hover:text-gray-700">
+                        Voir le détail complet
+                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                      </div>
                     </div>
-                  </div>
-
-                  <div className={`overflow-hidden transition-all duration-300 ${
-                    hoveredCase === index ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'
-                  }`}>
-                    <p className="text-sm text-gray-600 italic pt-3 border-t border-gray-100">
-                      {case_item.description}
-                    </p>
-                  </div>
-
-                  <button className="text-sm text-gray-900 font-medium hover:gap-2 transition-all flex items-center gap-1 group-hover:text-gray-700">
-                    Voir le détail complet
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </button>
-                </div>
+                  </Link>
+                ))}
               </div>
-            ))}
-          </div>
 
-          <div className="mt-12 text-center opacity-0 animate-fadeInUp delay-400">
-            <button className="px-8 py-4 border-2 border-gray-300 text-gray-900 font-medium rounded-lg hover:border-gray-900 transition-all duration-300 hover:shadow-lg inline-flex items-center gap-2 group">
-              Voir tous les {cases.length * 5}+ cas documentés
-              <ExternalLink className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-            </button>
-          </div>
+              <div className="mt-12 text-center opacity-0 animate-fadeInUp delay-400">
+                <Link href="/database" className="px-8 py-4 border-2 border-gray-300 text-gray-900 font-medium rounded-lg hover:border-gray-900 transition-all duration-300 hover:shadow-lg inline-flex items-center gap-2 group">
+                  Voir tous les cas documentés
+                  <ExternalLink className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </section>
 

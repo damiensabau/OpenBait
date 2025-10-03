@@ -136,6 +136,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Vérifier que l'utilisateur existe toujours
+    const userExists = await prisma.user.findUnique({
+      where: { id: payload.userId }
+    });
+
+    if (!userExists) {
+      return NextResponse.json(
+        { error: 'Utilisateur introuvable. Veuillez vous reconnecter.' },
+        { status: 401 }
+      );
+    }
+
     // Créer le post
     const post = await prisma.post.create({
       data: {
@@ -160,6 +172,15 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Erreur lors de la création du post:', error);
+    
+    // Gestion d'erreur spécifique pour les contraintes de clé étrangère
+    if (error.code === 'P2003') {
+      return NextResponse.json(
+        { error: 'Session expirée. Veuillez vous reconnecter.' },
+        { status: 401 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Erreur serveur' },
       { status: 500 }
