@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
+import { notifyCaseApproved, notifyCaseRejected } from '@/lib/notifications';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Vérifier l'authentification
     const authHeader = request.headers.get('authorization');
     
@@ -49,11 +51,44 @@ export async function PATCH(
         );
       }
 
+      // Get case before update to send notification
+      const caseData = await prisma.case.findUnique({
+        where: { id },
+        select: {
+          companyName: true,
+          productName: true,
+          reporterId: true,
+          status: true
+        }
+      });
+
       // Mettre à jour uniquement le statut
       const updatedCase = await prisma.case.update({
-        where: { id: params.id },
+        where: { id },
         data: { status }
       });
+
+      // Send notification if case has reporter and status changed
+      if (caseData && caseData.reporterId && caseData.status !== status) {
+        try {
+          const caseName = `${caseData.companyName} - ${caseData.productName}`;
+          if (status === 'APPROVED') {
+            await notifyCaseApproved(
+              caseData.reporterId,
+              caseName,
+              id
+            );
+          } else if (status === 'REJECTED') {
+            await notifyCaseRejected(
+              caseData.reporterId,
+              caseName,
+              id
+            );
+          }
+        } catch (error) {
+          console.error('Error sending notification:', error);
+        }
+      }
 
       return NextResponse.json({
         message: 'Statut mis à jour',
@@ -93,7 +128,7 @@ export async function PATCH(
 
     // Mettre à jour le cas
     const updatedCase = await prisma.case.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData
     });
 
@@ -113,9 +148,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Vérifier l'authentification
     const authHeader = request.headers.get('authorization');
     
@@ -146,7 +182,7 @@ export async function DELETE(
 
     // Supprimer le cas
     await prisma.case.delete({
-      where: { id: params.id }
+      where: { id }
     });
 
     return NextResponse.json({

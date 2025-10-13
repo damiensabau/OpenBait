@@ -4,12 +4,13 @@ import { prisma } from '@/lib/prisma';
 // GET - Récupérer un cas par ID (API publique)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const caseData = await prisma.case.findUnique({
       where: {
-        id: params.id
+        id
       },
       include: {
         reporter: {

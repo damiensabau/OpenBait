@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Shield, FileText, Clock, CheckCircle, X, Plus } from 'lucide-react';
+import NotificationBell from '@/app/components/NotificationBell';
 
 interface User {
   id: string;
@@ -67,6 +68,7 @@ export default function DashboardPage() {
               </span>
             </div>
             <div className="flex items-center gap-4">
+              <NotificationBell />
               <span className="text-sm text-gray-600">{user?.name}</span>
               <button
                 onClick={handleLogout}

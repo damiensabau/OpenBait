@@ -14,8 +14,7 @@ import {
   ExternalLink,
   AlertTriangle,
   Loader,
-  CheckCircle,
-  Code
+  CheckCircle
 } from 'lucide-react';
 
 export default function CaseDetailPage() {
@@ -79,37 +78,13 @@ export default function CaseDetailPage() {
   }
 
   // Parser les sources si elles sont en JSON string
-  let sources: string[] = [];
+  let sources = [];
   try {
     sources = typeof caseData.sources === 'string' 
       ? JSON.parse(caseData.sources) 
       : (caseData.sources || []);
-    
-    // S'assurer que c'est un tableau
-    if (!Array.isArray(sources)) {
-      sources = [];
-    }
   } catch (e) {
     console.error('Erreur parsing sources:', e);
-    sources = [];
-  }
-
-  // Parser les alternatives si elles sont en JSON string
-  let alternatives: string[] = [];
-  try {
-    if (caseData.alternatives) {
-      alternatives = typeof caseData.alternatives === 'string' 
-        ? JSON.parse(caseData.alternatives) 
-        : (caseData.alternatives || []);
-      
-      // S'assurer que c'est un tableau
-      if (!Array.isArray(alternatives)) {
-        alternatives = [];
-      }
-    }
-  } catch (e) {
-    console.error('Erreur parsing alternatives:', e);
-    alternatives = [];
   }
 
   // Formater la date
@@ -330,34 +305,6 @@ export default function CaseDetailPage() {
             </div>
           </div>
 
-          {/* Alternatives disponibles */}
-          {alternatives.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <Code className="w-6 h-6" />
-                Alternatives disponibles
-              </h2>
-              <p className="text-gray-600 mb-6">
-                Voici des alternatives open-source ou plus transparentes que vous pouvez utiliser :
-              </p>
-              <div className="grid md:grid-cols-2 gap-4">
-                {alternatives.map((alternative: string, index: number) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-3 p-4 bg-green-50 rounded-lg border border-green-200 hover:bg-green-100 transition-colors"
-                  >
-                    <div className="flex-shrink-0 w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                      <CheckCircle className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900">{alternative}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Sources */}
           {sources.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
@@ -366,53 +313,25 @@ export default function CaseDetailPage() {
                 Sources et références
               </h2>
               <div className="space-y-4">
-                {sources.map((sourceUrl: string, index: number) => {
-                  // Extraire un titre lisible de l'URL
-                  const getSourceTitle = (url: string) => {
-                    try {
-                      const urlObj = new URL(url);
-                      const hostname = urlObj.hostname.replace('www.', '');
-                      const pathParts = urlObj.pathname.split('/').filter(Boolean);
-                      
-                      if (pathParts.length > 0) {
-                        const lastPart = pathParts[pathParts.length - 1];
-                        // Formater le dernier segment du path
-                        return lastPart
-                          .replace(/-/g, ' ')
-                          .replace(/_/g, ' ')
-                          .split(' ')
-                          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                          .join(' ');
-                      }
-                      
-                      return hostname;
-                    } catch {
-                      return url;
-                    }
-                  };
-
-                  const title = getSourceTitle(sourceUrl);
-
-                  return (
-                    <a
-                      key={index}
-                      href={sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-900 hover:shadow-md transition-all group"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-gray-700 flex items-center gap-2">
-                            {title}
-                            <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </h3>
-                          <p className="text-sm text-gray-500 break-all">{sourceUrl}</p>
-                        </div>
+                {sources.map((source: any, index: number) => (
+                  <a
+                    key={index}
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-900 hover:shadow-md transition-all group"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-gray-700 flex items-center gap-2">
+                          {source.title}
+                          <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </h3>
+                        <p className="text-sm text-gray-500">{source.url}</p>
                       </div>
-                    </a>
-                  );
-                })}
+                    </div>
+                  </a>
+                ))}
               </div>
             </div>
           )}

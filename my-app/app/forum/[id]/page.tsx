@@ -3,12 +3,19 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowUp, ArrowDown, MessageSquare, Calendar, Eye, ArrowLeft, Send } from 'lucide-react';
+import { ArrowUp, ArrowDown, MessageSquare, Calendar, Eye, ArrowLeft, Send, Pin } from 'lucide-react';
+import EmojiReactionPicker from '@/app/components/EmojiReactionPicker';
+import UserBadges from '@/app/components/UserBadges';
+import ReputationDisplay from '@/app/components/ReputationDisplay';
+import { MarkdownContent } from '@/app/components/MarkdownEditor';
+import NotificationBell from '@/app/components/NotificationBell';
 
 interface Author {
   id: string;
   name: string;
   role: string;
+  reputation: number;
+  badges: string[];
 }
 
 interface Comment {
@@ -34,6 +41,8 @@ interface Post {
   author: Author;
   userVote: number | null;
   comments: Comment[];
+  tags: string[];
+  isPinned: boolean;
 }
 
 export default function PostDetailPage() {
@@ -72,6 +81,15 @@ export default function PostDetailPage() {
       }
 
       const data = await response.json();
+      
+      // Parse tags and badges if they are strings
+      if (data.tags && typeof data.tags === 'string') {
+        data.tags = JSON.parse(data.tags);
+      }
+      if (data.author?.badges && typeof data.author.badges === 'string') {
+        data.author.badges = JSON.parse(data.author.badges);
+      }
+      
       setPost(data);
     } catch (error) {
       console.error('Erreur:', error);
@@ -276,11 +294,12 @@ export default function PostDetailPage() {
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
       <header className="border-b border-gray-800 bg-gray-950">
-        <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/forum" className="flex items-center gap-2 text-gray-400 hover:text-white transition">
             <ArrowLeft className="w-5 h-5" />
             Retour au forum
           </Link>
+          {isAuthenticated && <NotificationBell />}
         </div>
       </header>
 
@@ -324,13 +343,31 @@ export default function PostDetailPage() {
 
               <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
 
+              {/* Pinned badge */}
+              {post.isPinned && (
+                <div className="flex items-center gap-2 mb-3 text-yellow-500">
+                  <Pin className="w-4 h-4" />
+                  <span className="text-sm font-semibold">Post épinglé</span>
+                </div>
+              )}
+
               {/* Meta info */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 mb-6">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-white">{post.author.name}</span>
+                  <UserBadges 
+                    badges={post.author.badges} 
+                    reputation={post.author.reputation}
+                    size="sm"
+                  />
                   <span className="text-xs px-2 py-0.5 bg-gray-700 rounded">
                     {post.author.role}
                   </span>
+                  <ReputationDisplay 
+                    reputation={post.author.reputation}
+                    showLabel={false}
+                    size="sm"
+                  />
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
@@ -346,9 +383,28 @@ export default function PostDetailPage() {
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="prose prose-invert max-w-none">
-                <p className="text-gray-300 whitespace-pre-wrap">{post.content}</p>
+              {/* Tags */}
+              {post.tags && post.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {post.tags.map((tag, index) => (
+                    <span 
+                      key={index}
+                      className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Content with Markdown */}
+              <div className="prose prose-invert max-w-none mb-6">
+                <MarkdownContent content={post.content} />
+              </div>
+
+              {/* Reactions */}
+              <div className="pt-4 border-t border-gray-700">
+                <EmojiReactionPicker postId={post.id} onReactionChange={fetchPost} />
               </div>
             </div>
           </div>

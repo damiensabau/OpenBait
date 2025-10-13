@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Shield, Code, Calendar, Building2, Lock, Unlock, ArrowRight, Search, Filter, TrendingDown, AlertTriangle, CheckCircle } from 'lucide-react';
+import NotificationBell from '@/app/components/NotificationBell';
 
 // Types
 interface Case {
@@ -28,6 +29,13 @@ export default function DatabasePage() {
   const [warningCount, setWarningCount] = useState(0);
   const [stableCount, setStableCount] = useState(0);
   const [categoriesCount, setCategoriesCount] = useState(0);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check authentication status
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
 
   // Charger les cas depuis l'API
   React.useEffect(() => {
@@ -271,12 +279,15 @@ export default function DatabasePage() {
                 <div className="text-xs text-gray-500">Base de données</div>
               </div>
             </Link>
-            <Link 
-              href="/"
-              className="px-5 py-2 border-2 border-gray-300 text-gray-900 text-sm font-medium rounded hover:border-gray-900 transition-all"
-            >
-              Retour à l'accueil
-            </Link>
+            <div className="flex items-center gap-4">
+              {isLoggedIn && <NotificationBell />}
+              <Link 
+                href="/"
+                className="px-5 py-2 border-2 border-gray-300 text-gray-900 text-sm font-medium rounded hover:border-gray-900 transition-all"
+              >
+                Retour à l'accueil
+              </Link>
+            </div>
           </div>
         </div>
       </nav>

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, Shield, Users, Code, Database, Search, FileText, TrendingDown, CheckCircle, ArrowRight, ExternalLink, Calendar, Building2, DollarSign, Lock, Unlock } from 'lucide-react';
+import NotificationBell from './components/NotificationBell';
 
 export default function OpenBaitLanding() {
   const [scrollY, setScrollY] = useState(0);
@@ -343,11 +344,13 @@ export default function OpenBaitLanding() {
               <Link href="/about" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">À propos</Link>
               <Link href="/database" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Base de données</Link>
               <Link href="/forum" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Forum</Link>
+              <Link href="/leaderboard" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">🏆 Classement</Link>
               <Link href="/team" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Équipe</Link>
               <Link href="/partners" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Partenaires</Link>
               
               {isLoggedIn ? (
                 <>
+                  <NotificationBell />
                   <Link href={userRole === 'ADMIN' || userRole === 'MODERATOR' ? '/admin' : '/dashboard'} className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">
                     {userRole === 'ADMIN' || userRole === 'MODERATOR' ? 'Admin' : 'Dashboard'}
                   </Link>
@@ -423,9 +426,8 @@ export default function OpenBaitLanding() {
             {/* Right - Image */}
             <div className="opacity-0 animate-slideInRight delay-200">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-900/20 to-gray-700/20 rounded-2xl transform rotate-3"></div>
                 <img 
-                  src="/image/28499.jpgs" 
+                  src="/image/IMG_2225af.png" 
                   alt="OpenBait Illustration" 
                   className="relative rounded-2xl shadow-2xl w-full h-auto object-cover card-hover"
                 />

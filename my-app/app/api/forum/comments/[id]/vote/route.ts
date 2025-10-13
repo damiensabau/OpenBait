@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
+import { notifyUpvote } from '@/lib/notifications';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Vérifier l'authentification
     const authHeader = request.headers.get('authorization');
     
@@ -40,7 +42,7 @@ export async function POST(
 
     // Vérifier si le commentaire existe
     const comment = await prisma.comment.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!comment) {
@@ -55,7 +57,7 @@ export async function POST(
       where: {
         userId_commentId: {
           userId: payload.userId,
-          commentId: params.id
+          commentId: id
         }
       }
     });
@@ -68,7 +70,7 @@ export async function POST(
             where: { id: existingVote.id }
           }),
           prisma.comment.update({
-            where: { id: params.id },
+            where: { id },
             data: {
               upvotes: value === 1 ? { decrement: 1 } : undefined,
               downvotes: value === -1 ? { decrement: 1 } : undefined
@@ -88,7 +90,7 @@ export async function POST(
             data: { value }
           }),
           prisma.comment.update({
-            where: { id: params.id },
+            where: { id },
             data: {
               upvotes: value === 1 ? { increment: 1 } : { decrement: 1 },
               downvotes: value === -1 ? { increment: 1 } : { decrement: 1 }
@@ -108,17 +110,39 @@ export async function POST(
           data: {
             value,
             userId: payload.userId,
-            commentId: params.id
+            commentId: id
           }
         }),
         prisma.comment.update({
-          where: { id: params.id },
+          where: { id },
           data: {
             upvotes: value === 1 ? { increment: 1 } : undefined,
             downvotes: value === -1 ? { increment: 1 } : undefined
           }
         })
       ]);
+
+      // Send notification if upvoted and not self-voting
+      if (value === 1 && comment.authorId !== payload.userId) {
+        try {
+          // Get the post to create the link
+          const fullComment = await prisma.comment.findUnique({
+            where: { id },
+            select: { postId: true }
+          });
+          
+          if (fullComment) {
+            await notifyUpvote(
+              comment.authorId,
+              'comment',
+              id,
+              `/forum/${fullComment.postId}#comment-${id}`
+            );
+          }
+        } catch (error) {
+          console.error('Error sending notification:', error);
+        }
+      }
 
       return NextResponse.json({
         message: 'Vote enregistré',

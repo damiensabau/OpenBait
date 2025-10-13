@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
+import { awardReputation, REPUTATION_REWARDS } from '@/lib/reputation';
+import { notifyReply } from '@/lib/notifications';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Vérifier l'authentification
     const authHeader = request.headers.get('authorization');
     
@@ -40,7 +43,7 @@ export async function POST(
 
     // Vérifier si le post existe
     const post = await prisma.post.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!post) {
@@ -63,7 +66,7 @@ export async function POST(
         );
       }
 
-      if (parentComment.postId !== params.id) {
+      if (parentComment.postId !== id) {
         return NextResponse.json(
           { error: 'Le commentaire parent n\'appartient pas à ce post' },
           { status: 400 }
@@ -76,7 +79,7 @@ export async function POST(
       data: {
         content: content.trim(),
         authorId: payload.userId,
-        postId: params.id,
+        postId: id,
         parentId: parentId || null
       },
       include: {
@@ -89,6 +92,47 @@ export async function POST(
         }
       }
     });
+
+    // Award reputation for creating a comment
+    try {
+      await awardReputation(
+        payload.userId,
+        REPUTATION_REWARDS.CREATE_COMMENT,
+        'Created a comment'
+      );
+    } catch (error) {
+      console.error('Error awarding reputation:', error);
+    }
+
+    // Send notification to the author being replied to
+    try {
+      let recipientId: string | null = null;
+      
+      if (parentId) {
+        // Reply to a comment
+        const parentComment = await prisma.comment.findUnique({
+          where: { id: parentId },
+          select: { authorId: true },
+        });
+        recipientId = parentComment?.authorId || null;
+      } else {
+        // Reply to the post
+        recipientId = post.authorId;
+      }
+
+      // Don't notify if replying to yourself
+      if (recipientId && recipientId !== payload.userId) {
+        await notifyReply(
+          recipientId,
+          comment.author.name,
+          parentId ? 'comment' : 'post',
+          comment.id,
+          `/forum/${id}`
+        );
+      }
+    } catch (error) {
+      console.error('Error sending reply notification:', error);
+    }
 
     return NextResponse.json(comment, { status: 201 });
 

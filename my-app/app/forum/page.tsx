@@ -3,7 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Shield, MessageSquare, TrendingUp, Plus, ArrowUp, ArrowDown, Eye, MessageCircle, Calendar, User, Filter } from 'lucide-react';
+import { Shield, MessageSquare, TrendingUp, Plus, ArrowUp, ArrowDown, Eye, MessageCircle, Calendar, User, Filter, Pin, Tag } from 'lucide-react';
+import UserBadges from '@/app/components/UserBadges';
+import ReputationDisplay from '@/app/components/ReputationDisplay';
+import NotificationBell from '@/app/components/NotificationBell';
 
 interface Post {
   id: string;
@@ -15,12 +18,16 @@ interface Post {
   downvotes: number;
   author: {
     name: string;
+    reputation: number;
+    badges: string[];
   };
   _count: {
     comments: number;
   };
   createdAt: string;
   userVote?: number | null;
+  tags: string[];
+  isPinned: boolean;
 }
 
 export default function ForumPage() {
@@ -121,6 +128,7 @@ export default function ForumPage() {
               <span className="text-xl font-bold text-gray-900">OpenBait.org</span>
             </Link>
             <div className="flex items-center gap-4">
+              {isLoggedIn && <NotificationBell />}
               {isLoggedIn ? (
                 <Link
                   href="/forum/new"
@@ -301,13 +309,29 @@ export default function ForumPage() {
                       {/* Content */}
                       <div className="flex-1 p-6">
                         <Link href={`/forum/${post.id}`} className="block group">
-                          <div className="flex items-start gap-3 mb-3">
+                          <div className="flex items-start gap-3 mb-3 flex-wrap">
+                            {post.isPinned && (
+                              <span className="flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
+                                <Pin className="w-3 h-3" />
+                                Épinglé
+                              </span>
+                            )}
                             <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">
                               {post.category}
                             </span>
-                            <span className="text-xs text-gray-500">
-                              posté par <span className="font-medium">{post.author.name}</span> · {formatDate(post.createdAt)}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500">
+                                posté par <span className="font-medium">{post.author.name}</span>
+                              </span>
+                              <UserBadges 
+                                badges={post.author.badges} 
+                                reputation={post.author.reputation}
+                                size="sm"
+                                showTooltip={true}
+                              />
+                              <span className="text-xs text-gray-400">·</span>
+                              <span className="text-xs text-gray-500">{formatDate(post.createdAt)}</span>
+                            </div>
                           </div>
 
                           <h2 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
@@ -317,6 +341,21 @@ export default function ForumPage() {
                           <p className="text-gray-700 mb-4 line-clamp-2">
                             {post.content}
                           </p>
+
+                          {/* Tags */}
+                          {post.tags && post.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {post.tags.map((tag, index) => (
+                                <span 
+                                  key={index}
+                                  className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded-md text-xs font-medium"
+                                >
+                                  <Tag className="w-3 h-3" />
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
 
                           <div className="flex items-center gap-4 text-sm text-gray-600">
                             <div className="flex items-center gap-1">

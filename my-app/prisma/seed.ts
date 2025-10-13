@@ -1,4 +1,4 @@
-import { PrismaClient, CaseStatus, CaseSeverity } from '@prisma/client';
+import { PrismaClient, CaseStatus, CaseSeverity, Role, NotificationType } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -41,8 +41,14 @@ async function main() {
         'https://opentofu.org/',
         'https://www.linuxfoundation.org/press/announcing-opentofu'
       ]),
+      alternatives: JSON.stringify([
+        'OpenTofu (fork open-source)',
+        'Pulumi',
+        'AWS CloudFormation',
+        'Ansible'
+      ]),
       status: CaseStatus.APPROVED,
-      severity: CaseSeverity.CRITICAL, // Fork créé = impact majeur
+      severity: CaseSeverity.CRITICAL,
       reportCount: 47,
       reporterId: admin.id
     },
@@ -62,8 +68,14 @@ async function main() {
         'https://podman.io/',
         'https://rancherdesktop.io/'
       ]),
+      alternatives: JSON.stringify([
+        'Podman',
+        'Rancher Desktop',
+        'Colima',
+        'Minikube'
+      ]),
       status: CaseStatus.APPROVED,
-      severity: CaseSeverity.WARNING, // Alternatives existent
+      severity: CaseSeverity.WARNING,
       reportCount: 35,
       reporterId: admin.id
     },
@@ -83,8 +95,14 @@ async function main() {
         'https://opensearch.org/',
         'https://aws.amazon.com/blogs/opensource/introducing-opensearch/'
       ]),
+      alternatives: JSON.stringify([
+        'OpenSearch (fork open-source)',
+        'Apache Solr',
+        'Meilisearch',
+        'Typesense'
+      ]),
       status: CaseStatus.APPROVED,
-      severity: CaseSeverity.CRITICAL, // Fork créé = impact majeur
+      severity: CaseSeverity.CRITICAL,
       reportCount: 28,
       reporterId: admin.id
     },
@@ -104,8 +122,14 @@ async function main() {
         'https://valkey.io/',
         'https://www.linuxfoundation.org/press/linux-foundation-launches-valkey'
       ]),
+      alternatives: JSON.stringify([
+        'Valkey (fork BSD)',
+        'KeyDB',
+        'Dragonfly',
+        'Memcached'
+      ]),
       status: CaseStatus.APPROVED,
-      severity: CaseSeverity.CRITICAL, // Fork créé = impact majeur
+      severity: CaseSeverity.CRITICAL,
       reportCount: 52,
       reporterId: admin.id
     },
@@ -124,8 +148,14 @@ async function main() {
         'https://www.mongodb.com/licensing/server-side-public-license',
         'https://opensource.org/node/1099'
       ]),
+      alternatives: JSON.stringify([
+        'PostgreSQL',
+        'CouchDB',
+        'FerretDB',
+        'RavenDB'
+      ]),
       status: CaseStatus.APPROVED,
-      severity: CaseSeverity.WARNING, // Pas de fork mais controverse
+      severity: CaseSeverity.WARNING,
       reportCount: 22,
       reporterId: admin.id
     },
@@ -143,8 +173,14 @@ async function main() {
       sources: JSON.stringify([
         'https://blog.sentry.io/2019/11/06/relicensing-sentry/'
       ]),
+      alternatives: JSON.stringify([
+        'GlitchTip',
+        'Rollbar',
+        'Bugsnag',
+        'Raygun'
+      ]),
       status: CaseStatus.APPROVED,
-      severity: CaseSeverity.STABLE, // Accepté par la communauté
+      severity: CaseSeverity.STABLE,
       reportCount: 15,
       reporterId: admin.id
     },
@@ -162,8 +198,14 @@ async function main() {
       sources: JSON.stringify([
         'https://www.cockroachlabs.com/blog/oss-relicensing-cockroachdb/'
       ]),
+      alternatives: JSON.stringify([
+        'PostgreSQL',
+        'TiDB',
+        'YugabyteDB',
+        'Google Spanner'
+      ]),
       status: CaseStatus.APPROVED,
-      severity: CaseSeverity.STABLE, // BSL temporaire
+      severity: CaseSeverity.STABLE,
       reportCount: 8,
       reporterId: admin.id
     },
@@ -181,8 +223,14 @@ async function main() {
       sources: JSON.stringify([
         'https://www.confluent.io/blog/license-changes-confluent-platform/'
       ]),
+      alternatives: JSON.stringify([
+        'Apache Kafka (core)',
+        'Apache Pulsar',
+        'RabbitMQ',
+        'NATS'
+      ]),
       status: CaseStatus.APPROVED,
-      severity: CaseSeverity.WARNING, // Controverse mais pas de fork
+      severity: CaseSeverity.WARNING,
       reportCount: 12,
       reporterId: admin.id
     },
@@ -200,8 +248,14 @@ async function main() {
       sources: JSON.stringify([
         'https://grafana.com/blog/2021/04/20/grafana-loki-tempo-relicensing-to-agplv3/'
       ]),
+      alternatives: JSON.stringify([
+        'Prometheus + Alertmanager',
+        'Netdata',
+        'Zabbix',
+        'Datadog'
+      ]),
       status: CaseStatus.APPROVED,
-      severity: CaseSeverity.STABLE, // Bien accepté
+      severity: CaseSeverity.STABLE,
       reportCount: 18,
       reporterId: admin.id
     }
@@ -214,11 +268,206 @@ async function main() {
     console.log(`✅ Cas ajouté: ${createdCase.companyName} - ${createdCase.productName}`);
   }
 
+  // 3. Créer des utilisateurs supplémentaires pour les notifications
+  const user1 = await prisma.user.upsert({
+    where: { email: 'john.doe@example.com' },
+    update: {},
+    create: {
+      email: 'john.doe@example.com',
+      name: 'John Doe',
+      password: await bcrypt.hash('password123', 10),
+      role: Role.MEMBER,
+      reputation: 150,
+      badges: JSON.stringify(['Contributeur', 'Nouveau membre'])
+    }
+  });
+
+  const user2 = await prisma.user.upsert({
+    where: { email: 'jane.smith@example.com' },
+    update: {},
+    create: {
+      email: 'jane.smith@example.com',
+      name: 'Jane Smith',
+      password: await bcrypt.hash('password123', 10),
+      role: Role.MODERATOR,
+      reputation: 320,
+      badges: JSON.stringify(['Modérateur actif', 'Expert', 'Contributeur'])
+    }
+  });
+
+  console.log('✅ Utilisateurs supplémentaires créés');
+
+  // 4. Créer des notifications d'exemple
+  const notifications = [
+    {
+      userId: admin.id,
+      type: NotificationType.BADGE_UNLOCKED,
+      title: '🎉 Nouveau badge débloqué !',
+      message: 'Vous avez débloqué le badge "Expert" pour votre contribution exceptionnelle',
+      link: '/dashboard',
+      isRead: false,
+      metadata: JSON.stringify({
+        badge: 'Expert',
+        reason: 'Contribution exceptionnelle'
+      })
+    },
+    {
+      userId: admin.id,
+      type: NotificationType.CASE_APPROVED,
+      title: '✅ Cas approuvé',
+      message: 'Votre signalement "HashiCorp - Terraform" a été approuvé et publié',
+      link: '/database/hashicorp-terraform',
+      isRead: false,
+      metadata: JSON.stringify({
+        caseName: 'HashiCorp - Terraform',
+        approvedBy: 'Jane Smith'
+      })
+    },
+    {
+      userId: admin.id,
+      type: NotificationType.UPVOTE,
+      title: '👍 Votre post a reçu un vote positif',
+      message: 'John Doe a aimé votre post sur les licences open-source',
+      link: '/forum/post-123',
+      isRead: true,
+      metadata: JSON.stringify({
+        postTitle: 'Discussion sur les licences open-source',
+        voterName: 'John Doe'
+      })
+    },
+    {
+      userId: admin.id,
+      type: NotificationType.REPLY,
+      title: '💬 Nouvelle réponse à votre post',
+      message: 'Jane Smith a répondu à votre post "Impact des changements de licence"',
+      link: '/forum/post-456',
+      isRead: false,
+      metadata: JSON.stringify({
+        postTitle: 'Impact des changements de licence',
+        replierName: 'Jane Smith',
+        preview: 'Je suis d\'accord avec votre analyse...'
+      })
+    },
+    {
+      userId: admin.id,
+      type: NotificationType.REPLY,
+      title: '💬 Réponse à votre commentaire',
+      message: 'John Doe a répondu à votre commentaire',
+      link: '/forum/post-789#comment-123',
+      isRead: false,
+      metadata: JSON.stringify({
+        replierName: 'John Doe',
+        preview: 'C\'est un excellent point de vue...'
+      })
+    },
+    {
+      userId: admin.id,
+      type: NotificationType.REACTION,
+      title: '❤️ Réaction à votre post',
+      message: '5 personnes ont réagi à votre post avec ❤️',
+      link: '/forum/post-321',
+      isRead: true,
+      metadata: JSON.stringify({
+        emoji: '❤️',
+        count: 5,
+        postTitle: 'L\'avenir de l\'open source'
+      })
+    },
+    {
+      userId: admin.id,
+      type: NotificationType.CASE_REJECTED,
+      title: '❌ Cas rejeté',
+      message: 'Votre signalement "Example Corp - Product" nécessite plus d\'informations',
+      link: '/report',
+      isRead: true,
+      metadata: JSON.stringify({
+        caseName: 'Example Corp - Product',
+        reason: 'Informations insuffisantes',
+        rejectedBy: 'Jane Smith'
+      })
+    },
+    {
+      userId: admin.id,
+      type: NotificationType.POST_PINNED,
+      title: '📌 Votre post a été épinglé',
+      message: 'Un modérateur a épinglé votre post "Guide des licences open-source"',
+      link: '/forum/post-999',
+      isRead: false,
+      metadata: JSON.stringify({
+        postTitle: 'Guide des licences open-source',
+        pinnedBy: 'Jane Smith',
+        reason: 'Contenu de qualité exceptionnelle'
+      })
+    },
+    // Notifications pour l'utilisateur 1
+    {
+      userId: user1.id,
+      type: NotificationType.BADGE_UNLOCKED,
+      title: '🆕 Badge "Nouveau membre" débloqué',
+      message: 'Bienvenue dans la communauté OpenBait !',
+      link: '/dashboard',
+      isRead: false,
+      metadata: JSON.stringify({
+        badge: 'Nouveau membre',
+        welcomeMessage: true
+      })
+    },
+    {
+      userId: user1.id,
+      type: NotificationType.UPVOTE,
+      title: '👍 Premier vote positif !',
+      message: 'Votre commentaire a reçu son premier vote positif',
+      link: '/forum/post-555',
+      isRead: false,
+      metadata: JSON.stringify({
+        milestone: 'first_upvote'
+      })
+    },
+    // Notifications pour l'utilisateur 2
+    {
+      userId: user2.id,
+      type: NotificationType.BADGE_UNLOCKED,
+      title: '🛡️ Badge "Modérateur actif" débloqué',
+      message: 'Merci pour votre contribution à la modération !',
+      link: '/dashboard',
+      isRead: true,
+      metadata: JSON.stringify({
+        badge: 'Modérateur actif',
+        actionsCount: 50
+      })
+    },
+    {
+      userId: user2.id,
+      type: NotificationType.REPLY,
+      title: '💬 Nouvelle réponse',
+      message: 'Admin OpenBait a répondu à votre commentaire de modération',
+      link: '/forum/post-888',
+      isRead: false,
+      metadata: JSON.stringify({
+        replierName: 'Admin OpenBait',
+        preview: 'Merci pour votre intervention rapide...'
+      })
+    }
+  ];
+
+  for (const notifData of notifications) {
+    await prisma.notification.create({
+      data: notifData
+    });
+  }
+
+  console.log(`✅ ${notifications.length} notifications d'exemple créées`);
+
   console.log(`\n🎉 Seed terminé! ${cases.length} cas ajoutés.`);
   console.log('\n📝 Identifiants admin:');
   console.log('   Email: admin@openbait.org');
   console.log('   Mot de passe: admin123');
-  console.log('\n⚠️  Changez ce mot de passe en production!\n');
+  console.log('\n📝 Autres utilisateurs:');
+  console.log('   Email: john.doe@example.com');
+  console.log('   Mot de passe: password123');
+  console.log('\n   Email: jane.smith@example.com');
+  console.log('   Mot de passe: password123');
+  console.log('\n⚠️  Changez ces mots de passe en production!\n');
 }
 
 main()

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Shield, ArrowLeft, Send, AlertCircle, CheckCircle } from 'lucide-react';
+import MarkdownEditor from '@/app/components/MarkdownEditor';
+import TagInput from '@/app/components/TagInput';
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -12,7 +14,8 @@ export default function NewPostPage() {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    category: 'Discussion générale'
+    category: 'Discussion générale',
+    tags: [] as string[]
   });
 
   const categories = [
@@ -164,23 +167,36 @@ export default function NewPostPage() {
             <label htmlFor="content" className="block text-sm font-semibold text-gray-900 mb-2">
               Contenu *
             </label>
-            <textarea
-              id="content"
-              required
+            <MarkdownEditor
               value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              placeholder="Décrivez votre sujet en détail..."
-              rows={12}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900 resize-none"
+              onChange={(content) => setFormData({ ...formData, content })}
+              placeholder="Décrivez votre sujet en détail... (Markdown supporté)"
+              minHeight="300px"
             />
             <div className="flex justify-between items-center mt-1">
               <p className="text-xs text-gray-500">
-                Minimum 20 caractères. Markdown supporté.
+                Minimum 20 caractères
               </p>
               <p className="text-xs text-gray-500">
                 {formData.content.length} caractères
               </p>
             </div>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label htmlFor="tags" className="block text-sm font-semibold text-gray-900 mb-2">
+              Tags
+            </label>
+            <TagInput
+              tags={formData.tags}
+              onChange={(tags) => setFormData({ ...formData, tags })}
+              maxTags={5}
+              placeholder="Ajouter des tags (appuyez sur Entrée)..."
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Ajoutez jusqu'à 5 tags pour aider les autres à trouver votre post
+            </p>
           </div>
 
           {/* Guidelines */}

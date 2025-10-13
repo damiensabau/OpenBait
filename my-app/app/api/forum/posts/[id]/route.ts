@@ -4,12 +4,13 @@ import { verifyToken } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Incrémenter le nombre de vues
     await prisma.post.update({
-      where: { id: params.id },
+      where: { id },
       data: { views: { increment: 1 } }
     });
 
@@ -27,14 +28,16 @@ export async function GET(
 
     // Récupérer le post avec l'auteur
     const post = await prisma.post.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         author: {
           select: {
             id: true,
             name: true,
             email: true,
-            role: true
+            role: true,
+            reputation: true,
+            badges: true,
           }
         },
         votes: userId ? {
@@ -89,6 +92,12 @@ export async function GET(
     // Transformer les données pour inclure le vote de l'utilisateur
     const postWithUserVote = {
       ...post,
+      tags: post.tags ? JSON.parse(post.tags) : [],
+      author: {
+        ...post.author,
+        reputation: post.author.reputation || 0,
+        badges: post.author.badges ? JSON.parse(post.author.badges) : [],
+      },
       userVote: userId && post.votes && post.votes.length > 0 ? post.votes[0].value : null,
       votes: undefined, // Retirer le tableau votes
       comments: post.comments.map((comment: any) => ({

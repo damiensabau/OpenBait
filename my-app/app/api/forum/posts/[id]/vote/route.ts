@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyToken } from '@/lib/auth';
+import { awardReputation, REPUTATION_REWARDS } from '@/lib/reputation';
+import { notifyUpvote } from '@/lib/notifications';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Vérifier l'authentification
     const authHeader = request.headers.get('authorization');
     
@@ -40,7 +43,7 @@ export async function POST(
 
     // Vérifier si le post existe
     const post = await prisma.post.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
 
     if (!post) {
@@ -55,7 +58,7 @@ export async function POST(
       where: {
         userId_postId: {
           userId: payload.userId,
-          postId: params.id
+          postId: id
         }
       }
     });
@@ -68,7 +71,7 @@ export async function POST(
             where: { id: existingVote.id }
           }),
           prisma.post.update({
-            where: { id: params.id },
+            where: { id },
             data: {
               upvotes: value === 1 ? { decrement: 1 } : undefined,
               downvotes: value === -1 ? { decrement: 1 } : undefined
@@ -88,7 +91,7 @@ export async function POST(
             data: { value }
           }),
           prisma.post.update({
-            where: { id: params.id },
+            where: { id },
             data: {
               upvotes: value === 1 ? { increment: 1 } : { decrement: 1 },
               downvotes: value === -1 ? { increment: 1 } : { decrement: 1 }
@@ -108,17 +111,40 @@ export async function POST(
           data: {
             value,
             userId: payload.userId,
-            postId: params.id
+            postId: id
           }
         }),
         prisma.post.update({
-          where: { id: params.id },
+          where: { id },
           data: {
             upvotes: value === 1 ? { increment: 1 } : undefined,
             downvotes: value === -1 ? { increment: 1 } : undefined
           }
         })
       ]);
+
+      // Award reputation to post author if upvoted
+      if (value === 1) {
+        try {
+          await awardReputation(
+            post.authorId,
+            REPUTATION_REWARDS.POST_UPVOTED,
+            'Post upvoted'
+          );
+          
+          // Send notification if not self-voting
+          if (post.authorId !== payload.userId) {
+            await notifyUpvote(
+              post.authorId,
+              'post',
+              id,
+              `/forum/${id}`
+            );
+          }
+        } catch (error) {
+          console.error('Error awarding reputation:', error);
+        }
+      }
 
       return NextResponse.json({
         message: 'Vote enregistré',

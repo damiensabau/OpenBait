@@ -8,6 +8,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const sort = searchParams.get('sort') || 'hot';
     const category = searchParams.get('category');
+    const search = searchParams.get('search');
+    const author = searchParams.get('author');
+    const tags = searchParams.get('tags');
     
     // Vérifier si l'utilisateur est connecté pour récupérer ses votes
     const authHeader = request.headers.get('authorization');
@@ -23,8 +26,30 @@ export async function GET(request: NextRequest) {
 
     // Construire la requête
     const where: any = {};
+    
     if (category && category !== 'all') {
       where.category = category;
+    }
+    
+    // Recherche par texte (titre ou contenu)
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    
+    // Filtrer par auteur
+    if (author) {
+      where.authorId = author;
+    }
+    
+    // Filtrer par tags (cherche dans le JSON)
+    if (tags) {
+      const tagList = tags.split(',').map(t => t.trim());
+      where.AND = tagList.map(tag => ({
+        tags: { contains: tag }
+      }));
     }
 
     let orderBy: any = {};
@@ -39,7 +64,9 @@ export async function GET(request: NextRequest) {
       case 'hot':
       default:
         // Pour "hot", on va utiliser une combinaison de score et date
+        // Les posts épinglés en premier
         orderBy = [
+          { isPinned: 'desc' },
           { upvotes: 'desc' },
           { createdAt: 'desc' }
         ];
@@ -52,12 +79,16 @@ export async function GET(request: NextRequest) {
       include: {
         author: {
           select: {
-            name: true
+            id: true,
+            name: true,
+            reputation: true,
+            badges: true,
           }
         },
         _count: {
           select: {
-            comments: true
+            comments: true,
+            reactions: true,
           }
         },
         votes: userId ? {
@@ -68,9 +99,14 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Ajouter le vote de l'utilisateur à chaque post
+    // Ajouter le vote de l'utilisateur et parser les tags/badges
     const postsWithUserVote = posts.map(post => ({
       ...post,
+      tags: post.tags ? JSON.parse(post.tags) : [],
+      author: {
+        ...post.author,
+        badges: post.author.badges ? JSON.parse(post.author.badges) : [],
+      },
       userVote: userId && post.votes && post.votes.length > 0 ? post.votes[0].value : null,
       votes: undefined // Retirer le tableau votes de la réponse
     }));
@@ -112,7 +148,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, content, category } = body;
+    const { title, content, category, tags } = body;
 
     // Validation
     if (!title || !content || !category) {
@@ -154,20 +190,35 @@ export async function POST(request: NextRequest) {
         title,
         content,
         category,
+        tags: tags ? JSON.stringify(tags) : '[]',
         authorId: payload.userId
       },
       include: {
         author: {
           select: {
-            name: true
+            name: true,
+            reputation: true,
           }
         }
       }
     });
 
+    // Donner des points de réputation pour la création d'un post
+    await prisma.user.update({
+      where: { id: payload.userId },
+      data: {
+        reputation: {
+          increment: 5, // +5 points pour créer un post
+        },
+      },
+    });
+
     return NextResponse.json({
       message: 'Post créé avec succès',
-      post
+      post: {
+        ...post,
+        tags: tags || [],
+      }
     }, { status: 201 });
 
   } catch (error: any) {
