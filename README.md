@@ -1,6 +1,6 @@
 
 ___
-# Le projet
+# Le projet :
 
 ## Présentation
 

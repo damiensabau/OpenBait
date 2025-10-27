@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Shield, Database, Users, FileText, AlertTriangle, CheckCircle, Clock, X, Eye, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import NotificationBell from '@/app/components/NotificationBell';
+import LanguageSelector from '@/app/components/LanguageSelector';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface User {
   id: string;
@@ -29,6 +31,7 @@ interface Case {
 
 export default function AdminPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,7 +121,7 @@ export default function AdminPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement...</p>
+          <p className="text-gray-600">{t('admin.loading')}</p>
         </div>
       </div>
     );
@@ -142,13 +145,14 @@ export default function AdminPage() {
               </span>
             </div>
             <div className="flex items-center gap-4">
+              <LanguageSelector />
               <NotificationBell />
               <span className="text-sm text-gray-600">{user?.name}</span>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 font-medium"
               >
-                Déconnexion
+                {t('nav.logout')}
               </button>
             </div>
           </div>
@@ -159,15 +163,15 @@ export default function AdminPage() {
         {/* Page Title */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Panneau d'administration</h1>
-            <p className="text-gray-600">Gérez les cas signalés par la communauté</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('admin.title')}</h1>
+            <p className="text-gray-600">{t('admin.subtitle')}</p>
           </div>
           <Link 
             href="/admin/cases/add"
             className="px-6 py-3 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 shadow-lg hover:shadow-xl"
           >
             <FileText className="w-5 h-5" />
-            Ajouter un cas
+            {t('admin.addCase')}
           </Link>
         </div>
 
@@ -178,7 +182,7 @@ export default function AdminPage() {
               <Clock className="w-8 h-8 text-yellow-600" />
               <span className="text-3xl font-bold text-gray-900">{stats.pending}</span>
             </div>
-            <p className="text-sm text-gray-600 font-medium">En attente</p>
+            <p className="text-sm text-gray-600 font-medium">{t('admin.pending')}</p>
           </div>
           
           <div className="bg-white rounded-xl p-6 border border-gray-200">
@@ -186,7 +190,7 @@ export default function AdminPage() {
               <CheckCircle className="w-8 h-8 text-green-600" />
               <span className="text-3xl font-bold text-gray-900">{stats.approved}</span>
             </div>
-            <p className="text-sm text-gray-600 font-medium">Approuvés</p>
+            <p className="text-sm text-gray-600 font-medium">{t('admin.approved')}</p>
           </div>
           
           <div className="bg-white rounded-xl p-6 border border-gray-200">
@@ -194,7 +198,7 @@ export default function AdminPage() {
               <X className="w-8 h-8 text-red-600" />
               <span className="text-3xl font-bold text-gray-900">{stats.rejected}</span>
             </div>
-            <p className="text-sm text-gray-600 font-medium">Rejetés</p>
+            <p className="text-sm text-gray-600 font-medium">{t('admin.rejected')}</p>
           </div>
           
           <div className="bg-white rounded-xl p-6 border border-gray-200">
@@ -202,7 +206,7 @@ export default function AdminPage() {
               <Database className="w-8 h-8 text-blue-600" />
               <span className="text-3xl font-bold text-gray-900">{stats.total}</span>
             </div>
-            <p className="text-sm text-gray-600 font-medium">Total</p>
+            <p className="text-sm text-gray-600 font-medium">{t('admin.total')}</p>
           </div>
         </div>
 
@@ -219,9 +223,9 @@ export default function AdminPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {status === 'ALL' ? 'Tous' : 
-                 status === 'PENDING' ? 'En attente' :
-                 status === 'APPROVED' ? 'Approuvés' : 'Rejetés'}
+                {status === 'ALL' ? t('admin.all') : 
+                 status === 'PENDING' ? t('admin.pending') :
+                 status === 'APPROVED' ? t('admin.approved') : t('admin.rejected')}
               </button>
             ))}
           </div>
@@ -232,7 +236,7 @@ export default function AdminPage() {
           {filteredCases.length === 0 ? (
             <div className="p-12 text-center">
               <Database className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600 text-lg">Aucun cas à afficher</p>
+              <p className="text-gray-600 text-lg">{t('admin.noCases')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -240,25 +244,25 @@ export default function AdminPage() {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Cas
+                      {t('table.case')}
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Catégorie
+                      {t('table.category')}
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      🔥 Signalements
+                      {t('table.reports')}
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Signalé par
+                      {t('table.reportedBy')}
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Date
+                      {t('table.date')}
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Statut
+                      {t('table.status')}
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Actions
+                      {t('table.actions')}
                     </th>
                   </tr>
                 </thead>
@@ -288,12 +292,12 @@ export default function AdminPage() {
                           </span>
                           {case_item.reportCount >= 40 && (
                             <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">
-                              🔥 URGENT
+                              {t('status.urgent')}
                             </span>
                           )}
                           {case_item.reportCount >= 20 && case_item.reportCount < 40 && (
                             <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full">
-                              ⚠️ PRIORITÉ
+                              {t('status.priority')}
                             </span>
                           )}
                         </div>
@@ -313,19 +317,19 @@ export default function AdminPage() {
                         {case_item.status === 'PENDING' && (
                           <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
                             <Clock className="w-3 h-3" />
-                            En attente
+                            {t('status.pending')}
                           </span>
                         )}
                         {case_item.status === 'APPROVED' && (
                           <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
                             <CheckCircle className="w-3 h-3" />
-                            Approuvé
+                            {t('status.approved')}
                           </span>
                         )}
                         {case_item.status === 'REJECTED' && (
                           <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
                             <X className="w-3 h-3" />
-                            Rejeté
+                            {t('status.rejected')}
                           </span>
                         )}
                       </td>
@@ -336,14 +340,14 @@ export default function AdminPage() {
                               <button
                                 onClick={() => handleStatusChange(case_item.id, 'APPROVED')}
                                 className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                title="Approuver"
+                                title={t('action.approve')}
                               >
                                 <CheckCircle className="w-5 h-5" />
                               </button>
                               <button
                                 onClick={() => handleStatusChange(case_item.id, 'REJECTED')}
                                 className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Rejeter"
+                                title={t('action.reject')}
                               >
                                 <X className="w-5 h-5" />
                               </button>
@@ -352,7 +356,7 @@ export default function AdminPage() {
                           <Link
                             href={`/admin/cases/edit/${case_item.id}`}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Voir et modifier"
+                            title={t('action.view')}
                           >
                             <Eye className="w-5 h-5" />
                           </Link>

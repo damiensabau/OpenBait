@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Shield, Code, Calendar, Building2, Lock, Unlock, ArrowRight, Search, Filter, TrendingDown, AlertTriangle, CheckCircle } from 'lucide-react';
 import NotificationBell from '@/app/components/NotificationBell';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSelector from '@/app/components/LanguageSelector';
 
 // Types
 interface Case {
@@ -20,6 +22,7 @@ interface Case {
 }
 
 export default function DatabasePage() {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
@@ -276,16 +279,17 @@ export default function DatabasePage() {
               </div>
               <div>
                 <div className="text-xl font-semibold text-gray-900">OpenBait.org</div>
-                <div className="text-xs text-gray-500">Base de données</div>
+                <div className="text-xs text-gray-500">{t('db.nav.subtitle')}</div>
               </div>
             </Link>
             <div className="flex items-center gap-4">
               {isLoggedIn && <NotificationBell />}
+              <LanguageSelector />
               <Link 
                 href="/"
                 className="px-5 py-2 border-2 border-gray-300 text-gray-900 text-sm font-medium rounded hover:border-gray-900 transition-all"
               >
-                Retour à l'accueil
+                {t('db.nav.back')}
               </Link>
             </div>
           </div>
@@ -297,11 +301,10 @@ export default function DatabasePage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold text-gray-900 mb-4">
-              Base de données complète
+              {t('db.title')}
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Tous les cas documentés de changements de modèles économiques, 
-              avec analyses détaillées et timeline complète
+              {t('db.subtitle')}
             </p>
           </div>
 
@@ -309,32 +312,32 @@ export default function DatabasePage() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12">
             <div className="bg-white rounded-lg border border-gray-200 p-4 text-center hover:shadow-lg transition-shadow">
               <div className="text-3xl font-bold text-gray-900">{cases.length}</div>
-              <div className="text-sm text-gray-600">Cas documentés</div>
+              <div className="text-sm text-gray-600">{t('db.stats.documented')}</div>
             </div>
             <div className="bg-white rounded-lg border border-gray-200 p-4 text-center hover:shadow-lg transition-shadow">
               <div className="text-3xl font-bold text-red-600 flex items-center justify-center gap-2">
                 <AlertTriangle className="w-6 h-6" />
                 {criticalCount}
               </div>
-              <div className="text-sm text-gray-600">Critiques</div>
+              <div className="text-sm text-gray-600">{t('db.stats.critical')}</div>
             </div>
             <div className="bg-white rounded-lg border border-gray-200 p-4 text-center hover:shadow-lg transition-shadow">
               <div className="text-3xl font-bold text-orange-600 flex items-center justify-center gap-2">
                 <TrendingDown className="w-6 h-6" />
                 {warningCount}
               </div>
-              <div className="text-sm text-gray-600">Avertissements</div>
+              <div className="text-sm text-gray-600">{t('db.stats.warnings')}</div>
             </div>
             <div className="bg-white rounded-lg border border-gray-200 p-4 text-center hover:shadow-lg transition-shadow">
               <div className="text-3xl font-bold text-green-600 flex items-center justify-center gap-2">
                 <CheckCircle className="w-6 h-6" />
                 {stableCount}
               </div>
-              <div className="text-sm text-gray-600">Stables</div>
+              <div className="text-sm text-gray-600">{t('db.stats.stable')}</div>
             </div>
             <div className="bg-white rounded-lg border border-gray-200 p-4 text-center hover:shadow-lg transition-shadow">
               <div className="text-3xl font-bold text-blue-600">{categoriesCount}</div>
-              <div className="text-sm text-gray-600">Catégories</div>
+              <div className="text-sm text-gray-600">{t('db.stats.categories')}</div>
             </div>
           </div>
 
@@ -346,7 +349,7 @@ export default function DatabasePage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Rechercher une entreprise, produit..."
+                  placeholder={t('db.search.placeholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900 transition-colors"
@@ -361,11 +364,11 @@ export default function DatabasePage() {
                   onChange={(e) => setFilterStatus(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900 transition-colors appearance-none bg-white"
                 >
-                  <option value="all">Tous les statuts</option>
-                  <option value="critical">Critiques</option>
-                  <option value="warning">Avertissements</option>
-                  <option value="stable">Stables (sûrs)</option>
-                  <option value="info">Informatifs</option>
+                  <option value="all">{t('db.filter.allStatus')}</option>
+                  <option value="critical">{t('db.filter.critical')}</option>
+                  <option value="warning">{t('db.filter.warnings')}</option>
+                  <option value="stable">{t('db.filter.stable')}</option>
+                  <option value="info">{t('db.filter.info')}</option>
                 </select>
               </div>
 
@@ -377,7 +380,7 @@ export default function DatabasePage() {
                   onChange={(e) => setFilterCategory(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900 transition-colors appearance-none bg-white"
                 >
-                  <option value="all">Toutes les catégories</option>
+                  <option value="all">{t('db.filter.allCategories')}</option>
                   {categories.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
@@ -387,7 +390,7 @@ export default function DatabasePage() {
 
             {/* Résultats */}
             <div className="mt-4 text-sm text-gray-600">
-              {filteredCases.length} résultat{filteredCases.length > 1 ? 's' : ''} trouvé{filteredCases.length > 1 ? 's' : ''}
+              {t('db.search.results', { count: filteredCases.length })}
             </div>
           </div>
         </div>
@@ -399,16 +402,16 @@ export default function DatabasePage() {
           {loading ? (
             <div className="text-center py-20">
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900 mx-auto mb-4"></div>
-              <p className="text-gray-600">Chargement des cas...</p>
+              <p className="text-gray-600">{t('db.loading')}</p>
             </div>
           ) : filteredCases.length === 0 ? (
             <div className="text-center py-20">
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="w-10 h-10 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun résultat</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('db.search.noResults')}</h3>
               <p className="text-gray-600">
-                Essayez de modifier vos filtres ou votre recherche
+                {t('db.search.noResultsDesc')}
               </p>
             </div>
           ) : (
@@ -454,7 +457,7 @@ export default function DatabasePage() {
                     {/* Changement de licence */}
                     <div className="pb-4 border-b border-gray-100 mb-4">
                       <div className="text-xs text-gray-500 mb-2 font-medium">
-                        CHANGEMENT DE LICENCE
+                        {t('db.card.licenseChange')}
                       </div>
                       <div className="flex items-center justify-between text-sm gap-2">
                         <span className="font-mono text-gray-700 flex items-center gap-1 text-xs">
@@ -477,7 +480,7 @@ export default function DatabasePage() {
                     {/* Footer */}
                     <div className="flex items-center justify-end pt-4 border-t border-gray-100">
                       <span className="text-sm text-gray-900 font-medium group-hover:gap-2 transition-all flex items-center gap-1">
-                        Voir les détails
+                        {t('db.card.viewDetails')}
                         <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                       </span>
                     </div>
@@ -493,10 +496,10 @@ export default function DatabasePage() {
       <footer className="py-12 border-t border-gray-200 bg-white mt-12">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <p className="text-gray-600 mb-4">
-            Base de données maintenue par la communauté OpenBait.org
+            {t('db.footer.maintained')}
           </p>
           <p className="text-sm text-gray-500">
-            © 2025 OpenBait.org - Projet communautaire non-lucratif sous licence MIT
+            {t('db.footer.copyright')}
           </p>
         </div>
       </footer>

@@ -4,8 +4,11 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, Shield, Users, Code, Database, Search, FileText, TrendingDown, CheckCircle, ArrowRight, ExternalLink, Calendar, Building2, DollarSign, Lock, Unlock } from 'lucide-react';
 import NotificationBell from './components/NotificationBell';
+import LanguageSelector from './components/LanguageSelector';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function OpenBaitLanding() {
+  const { t } = useLanguage();
   const [scrollY, setScrollY] = useState(0);
   const [isVisible, setIsVisible] = useState({});
   const [hoveredCase, setHoveredCase] = useState<number | null>(null);
@@ -22,6 +25,7 @@ export default function OpenBaitLanding() {
   const [recentCases, setRecentCases] = useState<any[]>([]);
   const [loadingCases, setLoadingCases] = useState(true);
   const [totalCases, setTotalCases] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Vérifier si l'utilisateur est connecté
   useEffect(() => {
@@ -329,94 +333,154 @@ export default function OpenBaitLanding() {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrollY > 50 ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-white'
       }`}>
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3 animate-slideInLeft">
-              <div className="w-10 h-10 bg-gray-900 rounded flex items-center justify-center transition-transform hover:scale-110 hover:rotate-12 duration-300">
-                <Shield className="w-6 h-6 text-white" />
+            <Link href="/" className="flex items-center gap-2 sm:gap-3 animate-slideInLeft">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-900 rounded flex items-center justify-center transition-transform hover:scale-110 hover:rotate-12 duration-300">
+                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <div className="text-xl font-semibold text-gray-900">OpenBait.org</div>
-                <div className="text-xs text-gray-500">Transparency in Software Licensing</div>
+                <div className="text-base sm:text-xl font-semibold text-gray-900">OpenBait.org</div>
+                <div className="hidden sm:block text-xs text-gray-500">Transparency in Software Licensing</div>
               </div>
-            </div>
-            <div className="hidden md:flex items-center gap-8 animate-slideInRight">
-              <Link href="/about" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">À propos</Link>
-              <Link href="/database" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Base de données</Link>
-              <Link href="/forum" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Forum</Link>
-              <Link href="/leaderboard" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">🏆 Classement</Link>
-              <Link href="/team" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Équipe</Link>
-              <Link href="/partners" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">Partenaires</Link>
+            </Link>
+            
+            {/* Desktop Menu */}
+            <div className="hidden lg:flex items-center gap-6 xl:gap-8 animate-slideInRight">
+              <Link href="/about" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">{t('nav.about')}</Link>
+              <Link href="/database" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">{t('nav.database')}</Link>
+              <Link href="/forum" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">{t('nav.forum')}</Link>
+              <Link href="/leaderboard" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">🏆 {t('nav.about')}</Link>
+              <Link href="/team" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">{t('home.footer.about')}</Link>
+              <Link href="/partners" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">{t('home.footer.about')}</Link>
+              
+              <LanguageSelector />
               
               {isLoggedIn ? (
                 <>
                   <NotificationBell />
                   <Link href={userRole === 'ADMIN' || userRole === 'MODERATOR' ? '/admin' : '/dashboard'} className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">
-                    {userRole === 'ADMIN' || userRole === 'MODERATOR' ? 'Admin' : 'Dashboard'}
+                    {userRole === 'ADMIN' || userRole === 'MODERATOR' ? t('nav.admin') : t('nav.dashboard')}
                   </Link>
-                  <Link href="/report" className="px-5 py-2 bg-gray-900 text-white text-sm font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-lg btn-primary">
-                    Signaler un cas
+                  <Link href="/report" className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-lg btn-primary">
+                    {t('home.hero.cta2')}
                   </Link>
                 </>
               ) : (
                 <>
                   <Link href="/auth/login" className="text-gray-600 hover:text-gray-900 text-sm font-medium gradient-border pb-1">
-                    Connexion
+                    {t('nav.login')}
                   </Link>
-                  <Link href="/auth/register" className="px-5 py-2 bg-gray-900 text-white text-sm font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-lg btn-primary">
-                    Inscription
+                  <Link href="/auth/register" className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-lg btn-primary">
+                    {t('nav.register')}
                   </Link>
                 </>
               )}
             </div>
+
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden flex items-center gap-3">
+              {isLoggedIn && <NotificationBell />}
+              <button 
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
+                aria-label="Menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {mobileMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
+            </div>
           </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="lg:hidden mt-4 pb-4 border-t border-gray-200 pt-4 animate-fadeIn">
+              <div className="flex flex-col space-y-3">
+                <Link href="/about" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2 hover:bg-gray-50 px-3 rounded transition-colors">À propos</Link>
+                <Link href="/database" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2 hover:bg-gray-50 px-3 rounded transition-colors">Base de données</Link>
+                <Link href="/forum" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2 hover:bg-gray-50 px-3 rounded transition-colors">Forum</Link>
+                <Link href="/leaderboard" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2 hover:bg-gray-50 px-3 rounded transition-colors">🏆 Classement</Link>
+                <Link href="/team" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2 hover:bg-gray-50 px-3 rounded transition-colors">Équipe</Link>
+                <Link href="/partners" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2 hover:bg-gray-50 px-3 rounded transition-colors">Partenaires</Link>
+                
+                {isLoggedIn ? (
+                  <>
+                    <Link href={userRole === 'ADMIN' || userRole === 'MODERATOR' ? '/admin' : '/dashboard'} className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2 hover:bg-gray-50 px-3 rounded transition-colors">
+                      {userRole === 'ADMIN' || userRole === 'MODERATOR' ? 'Admin' : 'Dashboard'}
+                    </Link>
+                    <Link href="/report" className="px-4 py-3 bg-gray-900 text-white text-sm font-medium rounded hover:bg-gray-800 transition-all duration-300 text-center">
+                      Signaler un cas
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/auth/login" className="text-gray-600 hover:text-gray-900 text-sm font-medium py-2 hover:bg-gray-50 px-3 rounded transition-colors">
+                      Connexion
+                    </Link>
+                    <Link href="/auth/register" className="px-4 py-3 bg-gray-900 text-white text-sm font-medium rounded hover:bg-gray-800 transition-all duration-300 text-center">
+                      Inscription
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
+      <section className="pt-20 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-20 left-10 w-72 h-72 bg-gray-900 rounded-full filter blur-3xl"></div>
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-gray-700 rounded-full filter blur-3xl"></div>
         </div>
         
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
             {/* Left - Content */}
-            <div className="opacity-0 animate-fadeInUp">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-xs font-medium rounded-full mb-8 hover:bg-gray-800 transition-all duration-300 cursor-pointer animate-scaleIn">
+            <div className="opacity-0 animate-fadeInUp text-center md:text-left">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-900 text-white text-xs font-medium rounded-full mb-6 sm:mb-8 hover:bg-gray-800 transition-all duration-300 cursor-pointer animate-scaleIn">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                PROJET COMMUNAUTAIRE NON-LUCRATIF
+                <span className="hidden sm:inline">PROJET COMMUNAUTAIRE NON-LUCRATIF</span>
+                <span className="sm:hidden">PROJET COMMUNAUTAIRE</span>
               </div>
-              <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-8 leading-tight opacity-0 animate-fadeInUp delay-100">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 sm:mb-8 leading-tight opacity-0 animate-fadeInUp delay-100">
                 Documenter les dérives des modèles économiques
                 <span className="block text-gray-600 mt-2">logiciels</span>
               </h1>
-              <p className="text-xl text-gray-600 mb-10 leading-relaxed opacity-0 animate-fadeInUp delay-200">
+              <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-8 sm:mb-10 leading-relaxed opacity-0 animate-fadeInUp delay-200">
                 OpenBait.org est une plateforme indépendante qui recense et analyse les logiciels passant 
                 de modèles gratuits ou open source à des modèles payants, afin d'informer les utilisateurs 
                 et décideurs <span className="font-semibold text-gray-900">avant qu'ils ne deviennent dépendants</span>.
               </p>
-              <div className="flex flex-wrap gap-4 opacity-0 animate-fadeInUp delay-300">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 opacity-0 animate-fadeInUp delay-300">
                 {isLoggedIn ? (
                   <>
-                    <Link href={userRole === 'ADMIN' || userRole === 'MODERATOR' ? '/admin' : '/dashboard'} className="px-8 py-4 bg-gray-900 text-white font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-xl flex items-center gap-2 group btn-primary">
+                    <Link href={userRole === 'ADMIN' || userRole === 'MODERATOR' ? '/admin' : '/dashboard'} className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gray-900 text-white text-sm sm:text-base font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-xl flex items-center justify-center gap-2 group btn-primary">
                       <Shield className="w-4 h-4" />
-                      {userRole === 'ADMIN' || userRole === 'MODERATOR' ? 'Panneau Admin' : 'Mon Dashboard'}
+                      <span className="hidden sm:inline">{userRole === 'ADMIN' || userRole === 'MODERATOR' ? 'Panneau Admin' : 'Mon Dashboard'}</span>
+                      <span className="sm:hidden">{userRole === 'ADMIN' || userRole === 'MODERATOR' ? 'Admin' : 'Dashboard'}</span>
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </Link>
-                    <Link href="/database" className="px-8 py-4 border-2 border-gray-300 text-gray-900 font-medium rounded hover:border-gray-900 transition-all duration-300 hover:shadow-lg">
+                    <Link href="/database" className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 text-gray-900 text-sm sm:text-base font-medium rounded hover:border-gray-900 transition-all duration-300 hover:shadow-lg text-center">
                       Base de données
                     </Link>
                   </>
                 ) : (
                   <>
-                    <Link href="/database" className="px-8 py-4 bg-gray-900 text-white font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-xl flex items-center gap-2 group btn-primary">
-                      Consulter la base de données
+                    <Link href="/database" className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gray-900 text-white text-sm sm:text-base font-medium rounded hover:bg-gray-800 transition-all duration-300 hover:shadow-xl flex items-center justify-center gap-2 group btn-primary">
+                      <span className="hidden sm:inline">Consulter la base de données</span>
+                      <span className="sm:hidden">Base de données</span>
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </Link>
-                    <Link href="/auth/register" className="px-8 py-4 border-2 border-gray-300 text-gray-900 font-medium rounded hover:border-gray-900 transition-all duration-300 hover:shadow-lg">
-                      Rejoindre la communauté
+                    <Link href="/auth/register" className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 text-gray-900 text-sm sm:text-base font-medium rounded hover:border-gray-900 transition-all duration-300 hover:shadow-lg text-center">
+                      <span className="hidden sm:inline">Rejoindre la communauté</span>
+                      <span className="sm:hidden">Rejoindre</span>
                     </Link>
                   </>
                 )}
@@ -424,19 +488,19 @@ export default function OpenBaitLanding() {
             </div>
 
             {/* Right - Image */}
-            <div className="opacity-0 animate-slideInRight delay-200">
+            <div className="opacity-0 animate-slideInRight delay-200 order-first md:order-last">
               <div className="relative">
                 <img 
                   src="/image/IMG_2225af.png" 
                   alt="OpenBait Illustration" 
-                  className="relative rounded-2xl shadow-2xl w-full h-auto object-cover card-hover"
+                  className="relative rounded-xl sm:rounded-2xl shadow-2xl w-full h-auto object-cover card-hover"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="scroll-indicator absolute bottom-8 left-1/2 transform -translate-x-1/2">
+        <div className="scroll-indicator hidden sm:block absolute bottom-8 left-1/2 transform -translate-x-1/2">
           <div className="w-6 h-10 border-2 border-gray-400 rounded-full flex items-start justify-center p-2">
             <div className="w-1 h-2 bg-gray-400 rounded-full animate-bounce"></div>
           </div>
@@ -444,10 +508,10 @@ export default function OpenBaitLanding() {
       </section>
 
       {/* Stats Section */}
-      <section id="stats-section" className="py-16 border-y border-gray-200 bg-white relative overflow-hidden">
+      <section id="stats-section" className="py-12 sm:py-16 border-y border-gray-200 bg-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-gray-50 via-white to-gray-50 opacity-50"></div>
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             {[
               { value: animatedValues.cases, label: "Cas documentés", delay: "delay-100" },
               { value: animatedValues.year, label: "Depuis l'année", delay: "delay-200" },
@@ -460,12 +524,12 @@ export default function OpenBaitLanding() {
                 onMouseEnter={() => setActiveMetric(index)}
                 onMouseLeave={() => setActiveMetric(null)}
               >
-                <div className={`text-5xl font-bold text-gray-900 mb-2 transition-all duration-300 ${
+                <div className={`text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-1 sm:mb-2 transition-all duration-300 ${
                   activeMetric === index ? 'text-reveal' : ''
                 }`}>
                   {stat.value}
                 </div>
-                <div className="text-sm text-gray-600 font-medium">{stat.label}</div>
+                <div className="text-xs sm:text-sm text-gray-600 font-medium px-2">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -473,9 +537,9 @@ export default function OpenBaitLanding() {
       </section>
 
       {/* Problem & Solution */}
-      <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-16">
+      <section className="py-12 sm:py-16 md:py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-12 md:gap-16">
             {/* Left - Problem */}
             <div className="opacity-0 animate-slideInLeft delay-100">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full mb-6">
@@ -562,15 +626,15 @@ export default function OpenBaitLanding() {
       </section>
 
       {/* Cases Section */}
-      <section className="py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16 opacity-0 animate-fadeInUp">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-900 text-white text-xs font-medium rounded-full mb-6">
+      <section className="py-12 sm:py-16 md:py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12 sm:mb-16 opacity-0 animate-fadeInUp">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-900 text-white text-xs font-medium rounded-full mb-4 sm:mb-6">
               <Database className="w-3 h-3" />
               BASE DE DONNÉES
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Cas Récents Documentés</h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 px-4">Cas Récents Documentés</h2>
+            <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto px-4">
               Exemples de changements de modèles économiques identifiés, analysés et vérifiés
             </p>
           </div>
@@ -582,12 +646,12 @@ export default function OpenBaitLanding() {
             </div>
           ) : (
             <>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {recentCases.map((case_item: any, index: number) => (
                   <Link
                     href={`/database/${case_item.id}`}
                     key={case_item.id}
-                    className={`bg-white border border-gray-200 rounded-xl p-6 card-hover cursor-pointer group opacity-0 animate-fadeInUp delay-${(index % 3 + 1) * 100}`}
+                    className={`bg-white border border-gray-200 rounded-xl p-4 sm:p-6 card-hover cursor-pointer group opacity-0 animate-fadeInUp delay-${(index % 3 + 1) * 100}`}
                     onMouseEnter={() => setHoveredCase(index)}
                     onMouseLeave={() => setHoveredCase(null)}
                   >
@@ -652,9 +716,10 @@ export default function OpenBaitLanding() {
                 ))}
               </div>
 
-              <div className="mt-12 text-center opacity-0 animate-fadeInUp delay-400">
-                <Link href="/database" className="px-8 py-4 border-2 border-gray-300 text-gray-900 font-medium rounded-lg hover:border-gray-900 transition-all duration-300 hover:shadow-lg inline-flex items-center gap-2 group">
-                  Voir tous les cas documentés
+              <div className="mt-8 sm:mt-12 text-center opacity-0 animate-fadeInUp delay-400">
+                <Link href="/database" className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 text-gray-900 text-sm sm:text-base font-medium rounded-lg hover:border-gray-900 transition-all duration-300 hover:shadow-lg inline-flex items-center gap-2 group">
+                  <span className="hidden sm:inline">Voir tous les cas documentés</span>
+                  <span className="sm:hidden">Tous les cas</span>
                   <ExternalLink className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
                 </Link>
               </div>
@@ -664,9 +729,9 @@ export default function OpenBaitLanding() {
       </section>
 
       {/* Methodology */}
-      <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-20 opacity-0 animate-fadeInUp">
+      <section className="py-12 sm:py-16 md:py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12 sm:mb-16 md:mb-20 opacity-0 animate-fadeInUp">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full mb-6">
               <CheckCircle className="w-3 h-3" />
               MÉTHODOLOGIE
@@ -677,7 +742,7 @@ export default function OpenBaitLanding() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-8 relative">
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 relative">
             {/* Connection lines */}
             <div className="hidden md:block absolute top-20 left-0 right-0 h-0.5 bg-gradient-to-r from-gray-200 via-gray-900 to-gray-200"></div>
             
@@ -687,21 +752,21 @@ export default function OpenBaitLanding() {
                 className={`relative opacity-0 animate-fadeInUp delay-${(index + 1) * 100}`}
               >
                 <div className="text-center group">
-                  <div className="relative inline-block mb-6">
-                    <div className="w-20 h-20 bg-gray-900 rounded-2xl flex items-center justify-center mx-auto transform transition-all duration-500 group-hover:rotate-12 group-hover:scale-110 pulse-border">
-                      <step.icon className="w-10 h-10 text-white" />
+                  <div className="relative inline-block mb-4 sm:mb-6">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-900 rounded-2xl flex items-center justify-center mx-auto transform transition-all duration-500 group-hover:rotate-12 group-hover:scale-110 pulse-border">
+                      <step.icon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                     </div>
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-white border-2 border-gray-900 rounded-full flex items-center justify-center text-sm font-bold text-gray-900 transition-transform group-hover:scale-110">
+                    <div className="absolute -top-2 -right-2 w-7 h-7 sm:w-8 sm:h-8 bg-white border-2 border-gray-900 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold text-gray-900 transition-transform group-hover:scale-110">
                       {index + 1}
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-gray-700 transition-colors">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3 group-hover:text-gray-700 transition-colors px-2">
                     {step.title}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 leading-relaxed px-2">
                     {step.description}
                   </p>
-                  <p className="text-xs text-gray-500 italic">
+                  <p className="text-xs text-gray-500 italic px-2">
                     {step.details}
                   </p>
                 </div>
@@ -712,26 +777,26 @@ export default function OpenBaitLanding() {
       </section>
 
       {/* Support Section */}
-      <section className="py-24 bg-gray-900 text-white relative overflow-hidden">
+      <section className="py-12 sm:py-16 md:py-24 bg-gray-900 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full filter blur-3xl"></div>
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gray-400 rounded-full filter blur-3xl"></div>
         </div>
         
-        <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center relative z-10">
           <div className="opacity-0 animate-fadeInUp">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-white text-xs font-medium rounded-full mb-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-white text-xs font-medium rounded-full mb-6 sm:mb-8">
               <DollarSign className="w-3 h-3" />
               FINANCEMENT
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Soutenir le projet</h2>
-            <p className="text-gray-300 text-lg mb-12 leading-relaxed max-w-3xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 px-4">Soutenir le projet</h2>
+            <p className="text-gray-300 text-base sm:text-lg mb-8 sm:mb-12 leading-relaxed max-w-3xl mx-auto px-4">
               OpenBait.org est un projet communautaire non-lucratif. Nous avons besoin de financement pour 
               maintenir l'infrastructure, assurer la recherche continue et garantir notre indépendance.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
             {[
               { icon: Database, title: "Infrastructure", desc: "Serveurs, redondance, sauvegardes" },
               { icon: Search, title: "Recherche", desc: "Veille active et documentation" },
@@ -739,23 +804,23 @@ export default function OpenBaitLanding() {
             ].map((item, i) => (
               <div 
                 key={i}
-                className={`bg-white/5 backdrop-blur border border-white/10 rounded-xl p-8 card-hover opacity-0 animate-fadeInUp delay-${(i + 1) * 100}`}
+                className={`bg-white/5 backdrop-blur border border-white/10 rounded-xl p-6 sm:p-8 card-hover opacity-0 animate-fadeInUp delay-${(i + 1) * 100}`}
               >
-                <div className="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <item.icon className="w-7 h-7 text-white" />
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/10 rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <item.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">{item.title}</h3>
-                <p className="text-sm text-gray-400">{item.desc}</p>
+                <h3 className="font-semibold text-base sm:text-lg mb-2">{item.title}</h3>
+                <p className="text-xs sm:text-sm text-gray-400">{item.desc}</p>
               </div>
             ))}
           </div>
 
           <div className="opacity-0 animate-fadeInUp delay-300">
-            <Link href="/support" className="px-10 py-5 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-300 hover:shadow-2xl inline-flex items-center gap-2 group btn-primary text-lg">
+            <Link href="/support" className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white text-gray-900 text-base sm:text-lg font-semibold rounded-lg hover:bg-gray-100 transition-all duration-300 hover:shadow-2xl inline-flex items-center justify-center gap-2 group btn-primary">
               Contribuer au projet
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </Link>
-            <p className="text-gray-400 mt-6 text-sm">
+            <p className="text-gray-400 mt-4 sm:mt-6 text-xs sm:text-sm px-4">
               100% transparent • 100% communautaire • 0% profit
             </p>
           </div>
@@ -763,9 +828,9 @@ export default function OpenBaitLanding() {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 border-t border-gray-200 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
+      <footer className="py-12 sm:py-16 border-t border-gray-200 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-8 sm:mb-12">
             <div className="opacity-0 animate-fadeInUp">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-gray-900 rounded flex items-center justify-center">
@@ -812,9 +877,9 @@ export default function OpenBaitLanding() {
             </div>
           </div>
 
-          <div className="pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
-            <p>© 2025 OpenBait.org - Projet communautaire non-lucratif sous licence MIT</p>
-            <div className="flex gap-6">
+          <div className="pt-6 sm:pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4 text-xs sm:text-sm text-gray-500 text-center md:text-left">
+            <p className="px-4 md:px-0">© 2025 OpenBait.org - Projet communautaire non-lucratif sous licence MIT</p>
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
               <a href="#" className="hover:text-gray-900 transition-colors">Mentions légales</a>
               <a href="#" className="hover:text-gray-900 transition-colors">Licence</a>
               <a href="#" className="hover:text-gray-900 transition-colors">Confidentialité</a>
