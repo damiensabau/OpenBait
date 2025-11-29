@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { PrismaClient, CaseStatus, CaseSeverity, Role, NotificationType } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
@@ -8,7 +9,7 @@ async function main() {
 
   // 1. Créer un utilisateur admin
   const hashedPassword = await bcrypt.hash('admin123', 10);
-  
+
   const admin = await prisma.user.upsert({
     where: { email: 'admin@openbait.org' },
     update: {},

@@ -4,6 +4,7 @@ OpenBait.org est une plateforme communautaire non-lucrative qui documente les ch
 
 ## 📋 Table des matières
 
+- [Démarrage Rapide](#-démarrage-rapide)
 - [Prérequis](#prérequis)
 - [Installation](#installation)
 - [Configuration de la base de données](#configuration-de-la-base-de-données)
@@ -12,6 +13,38 @@ OpenBait.org est une plateforme communautaire non-lucrative qui documente les ch
 - [Structure du projet](#structure-du-projet)
 - [Technologies utilisées](#technologies-utilisées)
 - [Contribution](#contribution)
+
+## ⚡ Démarrage Rapide
+
+Pour les impatients, voici les commandes essentielles pour démarrer le projet :
+
+\`\`\`bash
+# 1. Cloner et installer
+git clone https://github.com/damiensabau/OpenBait.git
+cd OpenBait/my-app
+npm install
+
+# 2. Terminal 1 : Démarrer la base de données Prisma
+npx prisma dev
+# ⚠️ Laissez ce terminal ouvert !
+
+# 3. Terminal 2 : Configurer le JWT_SECRET dans .env
+echo 'JWT_SECRET="'$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")'"' >> .env
+
+# 4. Terminal 2 : Créer les tables et données
+npx prisma db push
+npm run seed
+
+# 5. Terminal 2 : Lancer l'application
+npm run dev
+# 🚀 Ouvrez http://localhost:3000
+\`\`\`
+
+**Connexion admin :**
+- Email : `admin@openbait.org`
+- Mot de passe : `admin123`
+
+---
 
 ## 🛠️ Prérequis
 
@@ -42,25 +75,32 @@ pnpm install
 
 ## 🗄️ Configuration de la base de données
 
-### 1. Initialiser Prisma (si pas déjà fait)
+Ce projet utilise **Prisma Postgres** pour le développement local, une base de données PostgreSQL gérée automatiquement par Prisma.
+
+### 1. Démarrer le serveur Prisma Postgres
+
+**Dans un premier terminal**, lancez le serveur de développement Prisma :
 
 \`\`\`bash
-npx prisma init
+npx prisma dev
 \`\`\`
 
-Cette commande crée :
-- Un dossier \`prisma/\` avec \`schema.prisma\`
-- Un fichier \`.env\` pour les variables d'environnement
+Cette commande :
+- Démarre un serveur PostgreSQL local sur les ports 51213-51215
+- Génère automatiquement l'URL de connexion
+- Crée le fichier \`.env\` avec la variable \`DATABASE_URL\`
+
+> **Important** : Laissez ce terminal ouvert pendant le développement. Le serveur Prisma doit rester actif.
 
 ### 2. Configurer les variables d'environnement
 
-Créez ou modifiez le fichier \`.env\` à la racine du projet :
+Le fichier \`.env\` est créé automatiquement avec la \`DATABASE_URL\`. Ajoutez simplement le \`JWT_SECRET\` :
 
 \`\`\`env
-# Database
-DATABASE_URL="file:./dev.db"
+# Database URL (générée automatiquement par Prisma)
+DATABASE_URL="prisma+postgres://localhost:51213/?api_key=..."
 
-# JWT Secret (générez une clé aléatoire sécurisée)
+# JWT Secret (à ajouter manuellement)
 JWT_SECRET="votre_secret_jwt_super_securise_ici"
 \`\`\`
 
@@ -69,38 +109,34 @@ JWT_SECRET="votre_secret_jwt_super_securise_ici"
 > node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 > \`\`\`
 
-### 3. Générer le client Prisma
+### 3. Créer les tables dans la base de données
+
+**Dans un second terminal**, créez les tables à partir du schéma :
 
 \`\`\`bash
-npx prisma generate
-\`\`\`
-
-Cette commande génère le client Prisma TypeScript basé sur votre schéma.
-
-### 4. Créer la base de données et appliquer les migrations
-
-\`\`\`bash
-npx prisma migrate dev --name init
+npx prisma db push
 \`\`\`
 
 Cette commande :
-- Crée la base de données SQLite (\`prisma/dev.db\`)
-- Applique toutes les migrations
-- Génère le client Prisma
+- Crée toutes les tables définies dans \`schema.prisma\`
+- Génère le client Prisma TypeScript
+- Synchronise la base de données avec le schéma
 
-### 5. Peupler la base de données (seeding)
+### 4. Peupler la base de données (seeding)
+
+Ajoutez les données d'exemple :
 
 \`\`\`bash
 npm run seed
-# ou
-npx prisma db seed
 \`\`\`
 
 Cette commande ajoute :
-- Un utilisateur admin par défaut (\`admin@openbait.org\` / \`admin123\`)
-- 9 cas documentés célèbres (HashiCorp Terraform, Docker Desktop, etc.)
+- **1 utilisateur admin** (\`admin@openbait.org\` / \`admin123\`)
+- **2 utilisateurs de test** (john.doe@example.com et jane.smith@example.com)
+- **9 cas documentés** célèbres (HashiCorp Terraform, Docker Desktop, Elastic, Redis, MongoDB, etc.)
+- **12 notifications** d'exemple
 
-### 6. (Optionnel) Ouvrir Prisma Studio
+### 5. (Optionnel) Ouvrir Prisma Studio
 
 Pour visualiser et éditer vos données dans une interface graphique :
 
@@ -109,6 +145,14 @@ npx prisma studio
 \`\`\`
 
 Ouvrez http://localhost:5555 dans votre navigateur.
+
+---
+
+### ⚠️ Notes importantes
+
+- **Terminal 1** : Gardez \`npx prisma dev\` en cours d'exécution
+- **Terminal 2** : Utilisez-le pour lancer l'application (\`npm run dev\`)
+- Pour arrêter le serveur Prisma : Appuyez sur \`Ctrl+C\` dans le terminal 1
 
 ## 🚀 Démarrage du projet
 
@@ -213,9 +257,7 @@ my-app/
 │   └── prisma.ts                 # Client Prisma
 ├── prisma/                       # Prisma ORM
 │   ├── schema.prisma             # Schéma de base de données
-│   ├── seed.ts                   # Script de seeding
-│   ├── dev.db                    # Base SQLite
-│   └── migrations/               # Historique des migrations
+│   └── seed.ts                   # Script de seeding
 ├── public/                       # Fichiers statiques
 ├── .env                          # Variables d'environnement
 ├── next.config.ts                # Config Next.js
@@ -236,7 +278,7 @@ my-app/
 ### Backend
 - **Next.js API Routes** - Endpoints REST
 - **Prisma 6.16.3** - ORM moderne
-- **SQLite** - Base de données (facile pour dev)
+- **PostgreSQL** - Base de données (via Prisma Postgres pour le dev local)
 
 ### Authentification & Sécurité
 - **bcryptjs** - Hashing de mots de passe
@@ -312,13 +354,29 @@ git push origin main
 
 ## 👥 Comptes par défaut
 
-Après le seeding, vous pouvez vous connecter avec :
+Après le seeding, vous pouvez vous connecter avec l'un de ces comptes :
 
-**Admin :**
-- Email : \`admin@openbait.org\`
-- Mot de passe : \`admin123\`
+### 🔑 Compte Admin
+- **Email** : \`admin@openbait.org\`
+- **Mot de passe** : \`admin123\`
+- **Rôle** : ADMIN
+- **Permissions** : Accès complet au panneau admin, gestion des cas, modération
 
-> ⚠️ **Important** : Changez ce mot de passe en production !
+### 👤 Comptes Utilisateurs
+
+**John Doe (Membre) :**
+- **Email** : \`john.doe@example.com\`
+- **Mot de passe** : \`password123\`
+- **Rôle** : MEMBER
+- **Réputation** : 150 points
+
+**Jane Smith (Modératrice) :**
+- **Email** : \`jane.smith@example.com\`
+- **Mot de passe** : \`password123\`
+- **Rôle** : MODERATOR
+- **Réputation** : 320 points
+
+> ⚠️ **Important** : Changez ces mots de passe en production !
 
 ## 🔒 Sécurité
 
@@ -331,11 +389,26 @@ Après le seeding, vous pouvez vous connecter avec :
 
 ## 🐛 Troubleshooting
 
-### La base de données ne se crée pas
+### Le serveur Prisma ne démarre pas
 \`\`\`bash
-# Supprimez et recréez
-rm prisma/dev.db
-npx prisma migrate dev --name init
+# Vérifiez si le port est déjà utilisé
+lsof -i :51213
+
+# Essayez de redémarrer Prisma
+npx prisma dev
+\`\`\`
+
+### Erreur "Can't reach database server"
+- Assurez-vous que \`npx prisma dev\` est en cours d'exécution dans un terminal séparé
+- Vérifiez que le fichier \`.env\` contient la bonne \`DATABASE_URL\`
+- Redémarrez le serveur Prisma si nécessaire
+
+### Erreur "Table does not exist"
+\`\`\`bash
+# Recréez les tables
+npx prisma db push
+
+# Puis relancez le seed
 npm run seed
 \`\`\`
 
@@ -343,6 +416,11 @@ npm run seed
 \`\`\`bash
 npx prisma generate
 \`\`\`
+
+### Erreur lors du seed (dotenv)
+Si vous voyez "Environment variable not found: DATABASE_URL" lors du seed :
+- Vérifiez que \`dotenv\` est installé : \`npm install dotenv\`
+- Le fichier \`prisma/seed.ts\` doit commencer par \`import 'dotenv/config';\`
 
 ### Erreur JWT "Token invalide"
 - Vérifiez que \`JWT_SECRET\` est défini dans \`.env\`
