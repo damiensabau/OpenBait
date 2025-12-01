@@ -458,6 +458,92 @@ async function main() {
 
   console.log(`✅ ${notifications.length} notifications d'exemple créées`);
 
+  // 5. Ajouter des repositories à surveiller
+  const watchedRepos = [
+    {
+      owner: 'hashicorp',
+      name: 'terraform',
+      platform: 'github',
+      url: 'https://github.com/hashicorp/terraform',
+      currentLicense: 'BSL-1.1',
+      priority: 'high',
+      isActive: true,
+      addedBy: admin.id,
+      notes: 'Already changed from MPL to BSL. Monitor for potential future changes.',
+    },
+    {
+      owner: 'elastic',
+      name: 'elasticsearch',
+      platform: 'github',
+      url: 'https://github.com/elastic/elasticsearch',
+      currentLicense: 'SSPL',
+      priority: 'high',
+      isActive: true,
+      addedBy: admin.id,
+      notes: 'Already changed from Apache to SSPL. Monitor for updates.',
+    },
+    {
+      owner: 'redis',
+      name: 'redis',
+      platform: 'github',
+      url: 'https://github.com/redis/redis',
+      currentLicense: 'RSALv2 and SSPLv1',
+      priority: 'high',
+      isActive: true,
+      addedBy: admin.id,
+      notes: 'Changed from BSD to dual license. High priority monitoring.',
+    },
+    {
+      owner: 'mongodb',
+      name: 'mongo',
+      platform: 'github',
+      url: 'https://github.com/mongodb/mongo',
+      currentLicense: 'SSPL',
+      priority: 'high',
+      isActive: true,
+      addedBy: admin.id,
+      notes: 'Changed from AGPL to SSPL. Monitor for future changes.',
+    },
+    {
+      owner: 'grafana',
+      name: 'grafana',
+      platform: 'github',
+      url: 'https://github.com/grafana/grafana',
+      currentLicense: 'AGPL-3.0',
+      priority: 'medium',
+      isActive: true,
+      addedBy: admin.id,
+      notes: 'Popular monitoring tool with restrictive license.',
+    },
+    {
+      owner: 'cockroachdb',
+      name: 'cockroach',
+      platform: 'github',
+      url: 'https://github.com/cockroachdb/cockroach',
+      currentLicense: 'BSL',
+      priority: 'medium',
+      isActive: true,
+      addedBy: admin.id,
+      notes: 'Uses Business Source License.',
+    },
+  ];
+
+  for (const repoData of watchedRepos) {
+    await prisma.watchedRepository.upsert({
+      where: {
+        platform_owner_name: {
+          platform: repoData.platform,
+          owner: repoData.owner,
+          name: repoData.name,
+        }
+      },
+      update: {},
+      create: repoData,
+    });
+  }
+
+  console.log(`✅ ${watchedRepos.length} repositories ajoutés à la surveillance`);
+
   console.log(`\n🎉 Seed terminé! ${cases.length} cas ajoutés.`);
   console.log('\n📝 Identifiants admin:');
   console.log('   Email: admin@openbait.org');

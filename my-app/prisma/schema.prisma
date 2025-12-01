@@ -229,3 +229,105 @@ model Notification {
   @@map("notifications")
 }
 
+// License Monitoring System
+model WatchedRepository {
+  id          String   @id @default(cuid())
+  owner       String   // GitHub owner/org
+  name        String   // Repository name
+  platform    String   @default("github") // github, gitlab, etc.
+  url         String   // Full URL to repo
+  
+  // Monitoring config
+  isActive    Boolean  @default(true)
+  priority    String   @default("medium") // high, medium, low
+  lastChecked DateTime?
+  
+  // Current state
+  currentLicense String?
+  stars       Int?
+  description String?
+  
+  // Metadata
+  addedBy     String?
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  changes     LicenseChange[]
+  
+  @@unique([platform, owner, name])
+  @@index([isActive, lastChecked])
+  @@map("watched_repositories")
+}
+
+model LicenseChange {
+  id              String   @id @default(cuid())
+  
+  // Repository info
+  repoId          String
+  repository      WatchedRepository @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  
+  // Change details
+  oldLicense      String?
+  newLicense      String?
+  changeType      String   // "added", "modified", "removed", "restrictive", "permissive"
+  severity        CaseSeverity @default(WARNING)
+  
+  // Detection info
+  detectedAt      DateTime @default(now())
+  detectionMethod String   // "commit_analysis", "api_check", "manual", "external_source"
+  commitSha       String?
+  commitUrl       String?
+  commitDate      DateTime?
+  commitAuthor    String?
+  
+  // Status
+  status          String   @default("detected") // detected, reviewed, approved, rejected, case_created
+  reviewedAt      DateTime?
+  reviewedBy      String?
+  
+  // Auto-generated case
+  caseId          String?  // Link to Case if created
+  
+  // Additional data
+  confidence      Float    @default(1.0) // 0-1 confidence score
+  sources         String?  // JSON array of source URLs
+  notes           String?
+  metadata        String?  // JSON for additional data
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([status, severity])
+  @@index([detectedAt])
+  @@index([repoId, detectedAt])
+  @@map("license_changes")
+}
+
+model MonitoringLog {
+  id              String   @id @default(cuid())
+  
+  // What was monitored
+  targetType      String   // "repository", "package", "rss", "api"
+  targetId        String?  // ID of watched repo or external identifier
+  targetName      String
+  
+  // Result
+  status          String   // "success", "error", "no_change"
+  changesFound    Int      @default(0)
+  errorMessage    String?
+  
+  // Performance
+  duration        Int?     // milliseconds
+  
+  // Metadata
+  executedAt      DateTime @default(now())
+  metadata        String?  // JSON for additional data
+  
+  @@index([executedAt])
+  @@index([targetType, status])
+  @@map("monitoring_logs")
+}
+

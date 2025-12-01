@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/monitor/scan",
+      "schedule": "0 */6 * * *"
+    }
+  ]
+}

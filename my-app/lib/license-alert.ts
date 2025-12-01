@@ -1,0 +1,337 @@
+/**
+ * License Alert System
+ * Gère les alertes et la création automatique de cas
+ */
+
+import { prisma } from './prisma';
+import type { CaseSeverity } from '@prisma/client';
+
+interface DetectedChange {
+  repoId: string;
+  owner: string;
+  repo: string;
+  oldLicense: string | null;
+  newLicense: string | null;
+  commitSha: string;
+  commitUrl: string;
+  commitDate: Date;
+  commitAuthor: string;
+  changeType: string;
+  severity: CaseSeverity;
+  confidence: number;
+}
+
+export class LicenseAlertSystem {
+  
+  /**
+   * Traite un changement de licence détecté
+   */
+  async processDetectedChange(change: DetectedChange): Promise<string> {
+    try {
+      // 1. Vérifier si ce changement n'a pas déjà été enregistré
+      const existing = await prisma.licenseChange.findFirst({
+        where: {
+          repoId: change.repoId,
+          commitSha: change.commitSha,
+        }
+      });
+
+      if (existing) {
+        console.log(`Change already recorded: ${change.commitSha}`);
+        return existing.id;
+      }
+
+      // 2. Créer l'enregistrement de changement
+      const licenseChange = await prisma.licenseChange.create({
+        data: {
+          repoId: change.repoId,
+          oldLicense: change.oldLicense,
+          newLicense: change.newLicense,
+          changeType: change.changeType,
+          severity: change.severity,
+          detectedAt: new Date(),
+          detectionMethod: 'commit_analysis',
+          commitSha: change.commitSha,
+          commitUrl: change.commitUrl,
+          commitDate: change.commitDate,
+          commitAuthor: change.commitAuthor,
+          confidence: change.confidence,
+          status: 'detected',
+        }
+      });
+
+      // 3. Si la sévérité est CRITICAL, créer automatiquement un cas en PENDING
+      if (change.severity === 'CRITICAL' && change.confidence >= 0.8) {
+        await this.createCaseFromChange(change, licenseChange.id);
+      }
+
+      // 4. Notifier les modérateurs
+      await this.notifyModerators(change, licenseChange.id);
+
+      return licenseChange.id;
+
+    } catch (error) {
+      console.error('Error processing detected change:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Crée automatiquement un cas à partir d'un changement détecté
+   */
+  private async createCaseFromChange(change: DetectedChange, licenseChangeId: string): Promise<string | null> {
+    try {
+      // Trouver un admin/moderator pour assigner le cas
+      const moderator = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { role: 'ADMIN' },
+            { role: 'MODERATOR' }
+          ]
+        }
+      });
+
+      if (!moderator) {
+        console.warn('No moderator found to create case');
+        return null;
+      }
+
+      // Créer le cas
+      const caseData = {
+        companyName: change.owner,
+        productName: change.repo,
+        category: 'Software / SaaS',
+        licenseInitial: change.oldLicense || 'Unknown',
+        licenseFinal: change.newLicense || 'Unknown',
+        changeDate: change.commitDate.toISOString().split('T')[0],
+        website: `https://github.com/${change.owner}/${change.repo}`,
+        description: this.generateDescription(change),
+        legalAnalysis: this.generateLegalAnalysis(change),
+        communityReaction: 'Auto-detected license change. Community feedback pending.',
+        sources: JSON.stringify([
+          change.commitUrl,
+          `https://github.com/${change.owner}/${change.repo}`,
+        ]),
+        alternatives: JSON.stringify([]),
+        status: 'PENDING' as const,
+        severity: change.severity,
+        reportCount: 1,
+        reporterId: moderator.id,
+      };
+
+      const newCase = await prisma.case.create({
+        data: caseData,
+      });
+
+      // Lier le cas au changement de licence
+      await prisma.licenseChange.update({
+        where: { id: licenseChangeId },
+        data: { 
+          caseId: newCase.id,
+          status: 'case_created',
+        }
+      });
+
+      console.log(`Auto-created case ${newCase.id} for license change ${licenseChangeId}`);
+      
+      return newCase.id;
+
+    } catch (error) {
+      console.error('Error creating case from change:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Génère une description du changement
+   */
+  private generateDescription(change: DetectedChange): string {
+    const direction = this.getChangeDirection(change.oldLicense, change.newLicense);
+    
+    return `🤖 **Automatic Detection**
+
+The repository **${change.owner}/${change.repo}** has changed its license from **${change.oldLicense || 'None'}** to **${change.newLicense || 'None'}**.
+
+**Change Type**: ${change.changeType}
+**Detected on**: ${change.commitDate.toLocaleDateString()}
+**Commit Author**: ${change.commitAuthor}
+**Detection Confidence**: ${(change.confidence * 100).toFixed(0)}%
+
+**Impact**: This represents a ${direction} change in licensing terms.
+
+⚠️ This case was automatically generated by our monitoring system and requires manual review to confirm accuracy and gather additional context.`;
+  }
+
+  /**
+   * Génère une analyse légale préliminaire
+   */
+  private generateLegalAnalysis(change: DetectedChange): string {
+    const isRestrictive = change.changeType === 'restrictive';
+    
+    if (isRestrictive) {
+      return `⚖️ **Preliminary Legal Analysis** (Auto-generated)
+
+This license change represents a **significant restriction** in usage rights:
+
+**Previous License (${change.oldLicense})**: Generally considered permissive, allowing broad commercial and modification rights.
+
+**New License (${change.newLicense})**: More restrictive, potentially limiting:
+- Commercial usage
+- SaaS deployments
+- Closed-source derivatives
+
+**Potential Implications**:
+- Existing users under old license may face migration challenges
+- New deployments must comply with stricter terms
+- Fork from before the change may be necessary for some use cases
+
+⚠️ **This is an automated preliminary analysis. Professional legal review is recommended for production use.**`;
+    }
+
+    return `⚖️ **Preliminary Legal Analysis** (Auto-generated)
+
+License change detected from **${change.oldLicense || 'None'}** to **${change.newLicense || 'None'}**.
+
+**Assessment**: This change requires manual review to determine:
+- Impact on existing users and deployments
+- Compatibility with previous license terms
+- Rights granted vs. restrictions imposed
+
+⚠️ **This is an automated preliminary analysis. Professional legal review is recommended for production use.**`;
+  }
+
+  /**
+   * Détermine la direction du changement
+   */
+  private getChangeDirection(oldLicense: string | null, newLicense: string | null): string {
+    const permissive = ['MIT', 'Apache-2.0', 'BSD-3-Clause', 'BSD-2-Clause', 'ISC', 'Unlicense'];
+    const restrictive = ['SSPL', 'BSL', 'AGPL-3.0', 'GPL-3.0', 'Proprietary'];
+
+    const oldIsPermissive = oldLicense ? permissive.includes(oldLicense) : false;
+    const newIsRestrictive = newLicense ? restrictive.includes(newLicense) : false;
+
+    if (oldIsPermissive && newIsRestrictive) {
+      return '🔴 **more restrictive**';
+    } else if (!oldIsPermissive && !newIsRestrictive) {
+      return '🟢 **more permissive**';
+    } else {
+      return '🟡 **modified**';
+    }
+  }
+
+  /**
+   * Notifie les modérateurs d'un nouveau changement détecté
+   */
+  private async notifyModerators(change: DetectedChange, licenseChangeId: string): Promise<void> {
+    try {
+      const moderators = await prisma.user.findMany({
+        where: {
+          OR: [
+            { role: 'ADMIN' },
+            { role: 'MODERATOR' }
+          ]
+        }
+      });
+
+      const notifications = moderators.map(mod => ({
+        userId: mod.id,
+        type: 'CASE_UPDATED' as const,
+        title: `🔍 License Change Detected: ${change.owner}/${change.repo}`,
+        message: `License changed from ${change.oldLicense || 'None'} to ${change.newLicense || 'None'}. Severity: ${change.severity}`,
+        link: `/admin/monitoring/${licenseChangeId}`,
+        metadata: JSON.stringify({
+          licenseChangeId,
+          repoOwner: change.owner,
+          repoName: change.repo,
+          severity: change.severity,
+          changeType: change.changeType,
+        }),
+      }));
+
+      await prisma.notification.createMany({
+        data: notifications,
+      });
+
+      console.log(`Notified ${moderators.length} moderators about license change ${licenseChangeId}`);
+
+    } catch (error) {
+      console.error('Error notifying moderators:', error);
+    }
+  }
+
+  /**
+   * Récupère les changements en attente de review
+   */
+  async getPendingChanges() {
+    return prisma.licenseChange.findMany({
+      where: {
+        status: 'detected',
+      },
+      include: {
+        repository: true,
+      },
+      orderBy: [
+        { severity: 'desc' },
+        { confidence: 'desc' },
+        { detectedAt: 'desc' },
+      ],
+    });
+  }
+
+  /**
+   * Approuve un changement et crée un cas si nécessaire
+   */
+  async approveChange(licenseChangeId: string, reviewerId: string, createCase: boolean = false) {
+    const change = await prisma.licenseChange.findUnique({
+      where: { id: licenseChangeId },
+      include: { repository: true },
+    });
+
+    if (!change) {
+      throw new Error('License change not found');
+    }
+
+    await prisma.licenseChange.update({
+      where: { id: licenseChangeId },
+      data: {
+        status: createCase ? 'approved' : 'reviewed',
+        reviewedAt: new Date(),
+        reviewedBy: reviewerId,
+      }
+    });
+
+    if (createCase && !change.caseId) {
+      const changeData = {
+        repoId: change.repoId,
+        owner: change.repository.owner,
+        repo: change.repository.name,
+        oldLicense: change.oldLicense,
+        newLicense: change.newLicense,
+        commitSha: change.commitSha!,
+        commitUrl: change.commitUrl!,
+        commitDate: change.commitDate!,
+        commitAuthor: change.commitAuthor!,
+        changeType: change.changeType,
+        severity: change.severity,
+        confidence: change.confidence,
+      };
+
+      await this.createCaseFromChange(changeData, licenseChangeId);
+    }
+  }
+
+  /**
+   * Rejette un changement (faux positif)
+   */
+  async rejectChange(licenseChangeId: string, reviewerId: string, reason?: string) {
+    await prisma.licenseChange.update({
+      where: { id: licenseChangeId },
+      data: {
+        status: 'rejected',
+        reviewedAt: new Date(),
+        reviewedBy: reviewerId,
+        notes: reason,
+      }
+    });
+  }
+}

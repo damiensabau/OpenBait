@@ -491,7 +491,7 @@ export default function OpenBaitLanding() {
             <div className="opacity-0 animate-slideInRight delay-200 order-first md:order-last">
               <div className="relative">
                 <img 
-                  src="/image/IMG_2225af.png" 
+                  src="/image/c35003bb-fbdf-4249-8c0c-facb479d7cae_removalai_preview.png" 
                   alt="OpenBait Illustration" 
                   className="relative rounded-xl sm:rounded-2xl shadow-2xl w-full h-auto object-cover card-hover"
                 />

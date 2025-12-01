@@ -1,10 +1,36 @@
 
 ___
-# Le projet :
+# OpenBait.org - Surveillance des Changements de Licence
 
-## Présentation
+## 🎯 Présentation
 
-Projet de veille et communication sur les dérives des modèles économiques logiciels
+Projet de veille et communication sur les dérives des modèles économiques logiciels.
+
+### 🤖 Nouveau : Système de Monitoring Automatique
+
+**OpenBait intègre désormais un système de détection automatique des changements de licence !**
+
+Notre système surveille en continu les repositories GitHub populaires et détecte automatiquement :
+- 🔍 Changements dans les fichiers LICENSE
+- 📦 Modifications des métadonnées de licence (package.json, Cargo.toml)
+- 🚨 Transitions de licences permissives vers restrictives (ex: MIT → SSPL)
+- ⚠️ Adoption de licences commerciales (BSL, propriétaire)
+
+**Fonctionnalités** :
+- Scan automatique toutes les 6 heures via cron job
+- Détection de +20 types de licences
+- Calcul de sévérité (CRITICAL/WARNING/STABLE)
+- Notifications en temps réel aux modérateurs
+- Création automatique de cas pour changements critiques
+- Dashboard d'administration complet
+
+👉 **[Guide de démarrage rapide](my-app/QUICKSTART_MONITORING.md)**  
+📚 **[Documentation complète](my-app/MONITORING_SYSTEM.md)**  
+📝 **[Résumé technique](my-app/LICENSE_MONITORING_SUMMARY.md)**
+
+---
+
+## 📖 Contexte du Projet
 
 Nous aimerions proposer un projet communautaire né d'un constat : nombreux sont les logiciels open source, au départ gratuits et devenant payants après quelques années, une fois que leur produit a été éprouvé par les utilisateurs, qu'ils soient grand public ou entreprises privées. D'autres passent d'un modèle de licence payée en une fois à un format d'abonnement, une tendance qui s'accélère ces dernières années au vu du succès financier des entreprises vendant leurs services par abonnement.
 

@@ -1,0 +1,37 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Piège (Bear Trap) -->
+  <g transform="translate(200, 200)">
+    <!-- Mâchoire inférieure gauche -->
+    <path d="M -80 40 L -70 30 L -60 35 L -50 25 L -40 30 L -30 20 L -20 25 L -10 15 L 0 20" 
+          stroke="black" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Mâchoire inférieure droite -->
+    <path d="M 0 20 L 10 15 L 20 25 L 30 20 L 40 30 L 50 25 L 60 35 L 70 30 L 80 40" 
+          stroke="black" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Mâchoire supérieure gauche -->
+    <path d="M -80 -40 L -70 -30 L -60 -35 L -50 -25 L -40 -30 L -30 -20 L -20 -25 L -10 -15 L 0 -20" 
+          stroke="black" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Mâchoire supérieure droite -->
+    <path d="M 0 -20 L 10 -15 L 20 -25 L 30 -20 L 40 -30 L 50 -25 L 60 -35 L 70 -30 L 80 -40" 
+          stroke="black" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Base du piège -->
+    <ellipse cx="0" cy="0" rx="90" ry="15" fill="black" opacity="0.8"/>
+    
+    <!-- Ressort central -->
+    <circle cx="0" cy="0" r="12" fill="black"/>
+    <circle cx="0" cy="0" r="8" fill="white"/>
+    
+    <!-- Symbole Dollar -->
+    <g transform="translate(0, -90)">
+      <!-- Barre verticale du dollar -->
+      <rect x="-4" y="-65" width="8" height="130" fill="#6B9F6E" rx="2"/>
+      
+      <!-- S du dollar -->
+      <path d="M -25 -35 Q -25 -50 -10 -55 Q 5 -60 20 -55 Q 35 -50 35 -35 Q 35 -25 25 -20 L -15 0 Q -25 5 -25 15 Q -25 30 -10 35 Q 5 40 20 35 Q 35 30 35 15" 
+            stroke="#6B9F6E" stroke-width="14" fill="none" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

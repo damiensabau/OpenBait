@@ -166,13 +166,21 @@ export default function AdminPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('admin.title')}</h1>
             <p className="text-gray-600">{t('admin.subtitle')}</p>
           </div>
-          <Link 
-            href="/admin/cases/add"
-            className="px-6 py-3 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 shadow-lg hover:shadow-xl"
-          >
-            <FileText className="w-5 h-5" />
-            {t('admin.addCase')}
-          </Link>
+          <div className="flex gap-3">
+            <Link 
+              href="/admin/monitoring"
+              className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg hover:shadow-xl"
+            >
+              🔍 License Monitor
+            </Link>
+            <Link 
+              href="/admin/cases/add"
+              className="px-6 py-3 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2 shadow-lg hover:shadow-xl"
+            >
+              <FileText className="w-5 h-5" />
+              {t('admin.addCase')}
+            </Link>
+          </div>
         </div>
 
         {/* Stats Cards */}
