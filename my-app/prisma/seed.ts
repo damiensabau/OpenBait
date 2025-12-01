@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient, CaseStatus, CaseSeverity, Role, NotificationType } from '@prisma/client';
+import { PrismaClient, CaseStatus, CaseSeverity, Role, NotificationType } from '../lib/generated/prisma';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
