@@ -1,0 +1,231 @@
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MEMBER
+  MODERATOR
+  ADMIN
+}
+
+enum CaseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CaseSeverity {
+  CRITICAL // Changements majeurs avec fort impact
+  WARNING // Changements significatifs à surveiller
+  STABLE // Alternatives stables et fiables
+}
+
+enum NotificationType {
+  REPLY // Quelqu'un répond à votre post/commentaire
+  MENTION // Quelqu'un vous mentionne @username
+  UPVOTE // Votre post/commentaire reçoit un upvote
+  REACTION // Quelqu'un réagit à votre post
+  BADGE_UNLOCKED // Vous débloquez un nouveau badge
+  CASE_APPROVED // Votre cas signalé est approuvé
+  CASE_REJECTED // Votre cas signalé est rejeté
+  CASE_UPDATED // Un cas que vous avez signalé est mis à jour
+  POST_PINNED // Votre post a été épinglé
+}
+
+model User {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  name         String
+  password     String
+  role         Role    @default(MEMBER)
+  organization String?
+
+  // Gamification
+  reputation Int    @default(0) // Points de réputation
+  badges     String @default("") // JSON string containing array of badges
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cases         Case[]
+  posts         Post[]
+  comments      Comment[]
+  postVotes     PostVote[]
+  commentVotes  CommentVote[]
+  reactions     PostReaction[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Case {
+  id                String       @id @default(cuid())
+  companyName       String
+  productName       String
+  category          String
+  licenseInitial    String
+  licenseFinal      String
+  changeDate        String
+  website           String
+  description       String
+  legalAnalysis     String
+  communityReaction String
+  sources           String // JSON string containing array of sources
+  alternatives      String? // JSON string containing array of alternatives
+  status            CaseStatus   @default(PENDING)
+  severity          CaseSeverity @default(WARNING) // Niveau de gravité du changement
+  reportCount       Int          @default(1) // Nombre de fois que le cas a été signalé
+
+  // Reporter info
+  reporterId String
+  reporter   User   @relation(fields: [reporterId], references: [id])
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cases")
+}
+
+// Forum Models
+model Post {
+  id       String @id @default(cuid())
+  title    String
+  content  String // Markdown content
+  category String
+  tags     String @default("") // JSON array of tags
+
+  // Author
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  // Moderation
+  isPinned Boolean @default(false)
+
+  // Engagement
+  views     Int @default(0)
+  upvotes   Int @default(0)
+  downvotes Int @default(0)
+
+  // Relations
+  comments  Comment[]
+  votes     PostVote[]
+  reactions PostReaction[]
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("posts")
+}
+
+model Comment {
+  id      String @id @default(cuid())
+  content String
+
+  // Author
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  // Post relation
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  // Parent comment (for nested replies)
+  parentId String?
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  // Engagement
+  upvotes   Int @default(0)
+  downvotes Int @default(0)
+
+  // Relations
+  votes CommentVote[]
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("comments")
+}
+
+model PostVote {
+  id    String @id @default(cuid())
+  value Int // 1 for upvote, -1 for downvote
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@map("post_votes")
+}
+
+model CommentVote {
+  id    String @id @default(cuid())
+  value Int // 1 for upvote, -1 for downvote
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  commentId String
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, commentId])
+  @@map("comment_votes")
+}
+
+// Emoji reactions on posts
+model PostReaction {
+  id    String @id @default(cuid())
+  emoji String // 👍 👎 🔥 ❤️ 😂 😮 😢 😡
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId, emoji])
+  @@map("post_reactions")
+}
+
+// Notifications system
+model Notification {
+  id      String           @id @default(cuid())
+  type    NotificationType
+  title   String
+  message String
+  link    String? // URL vers la ressource concernée
+  isRead  Boolean          @default(false)
+
+  // Metadata optionnelle (JSON pour flexibilité)
+  metadata String? // JSON: {postId, commentId, authorName, etc.}
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
